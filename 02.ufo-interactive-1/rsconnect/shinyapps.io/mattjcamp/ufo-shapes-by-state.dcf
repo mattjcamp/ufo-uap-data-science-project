@@ -1,0 +1,12 @@
+name: ufo-shapes-by-state
+title: ufo-shapes-by-state
+username:
+account: mattjcamp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5780691
+bundleId: 5642101
+url: https://mattjcamp.shinyapps.io/ufo-shapes-by-state/
+when: 1646400618.89116
+asMultiple: FALSE
+asStatic: FALSE
