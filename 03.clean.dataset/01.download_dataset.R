@@ -68,9 +68,7 @@ duration_dataset <-
 
 # Pull out minutes, hours, seconds from lists
 
-d <- duration_dataset 
-# %>% filter(key <= 12)
-d <- map(.x = d$words, .f = function(x)({
+word_category <- map(.x = duration_dataset$words, .f = function(x)({
   
   s <- NA
 
@@ -81,7 +79,20 @@ d <- map(.x = d$words, .f = function(x)({
                      "miniutes","miutes","minits","mintes","minuted",
                      "minutea","minutos","mnutes","ninutes","mintutes",
                      "mim","mm","mns","mint","minuet","miinutes",
-                     "minnutes","minures","minutew","miuntes","mniutes"
+                     "minnutes","minures","minutew","miuntes","mniutes",
+                     "m","munites","mi","mims","minitues","minnute","minuates",
+                     "minuetes","minuits","minuntes","minurwa","minustes","minuters",
+                     "minutis","minuutes","monutes","ms","tominutes","minuit","minutue",
+                     "minu","miniuts","minns","minea","tomins","mints","minutestriangle",
+                     "minuite","imin","iminute","menutes","miin","miites","mina","minents",
+                     "minet","minetes","miniute","minonds","mnute","muntes","munutes","muinte",
+                     "miuets","miunets","miunute","miute","miuts","mlnutes","minurtes","minut",
+                     "minuteds","minutee","minutees","minutese","minuteswhile","minutets"
+                     ,"minutez","minuties","minutres","minuttes","minutues","mintue","mintute",
+                     "minsorlonger","inutes"
+                     
+                     
+                     
                      ))
         s = "minutes"
     
@@ -92,52 +103,52 @@ d <- map(.x = d$words, .f = function(x)({
                      "fast","brief","short","secondss",
                      "minsec","sconds","secinds","secnds",
                      "secondes","seonds","moments","econds",
-                     "millisecond"
+                     "millisecond","aboutseconds","secodns","seconda",
+                     "secondds","seconnds","secpnds","secunds","toseconds",
+                     "quick","quickly","approxsec","aproxsecs","seco",
+                     "tosecs","tosec","ceconds","deconds","desonds",
+                     "secon","milisec","milisecod","sseconds","ssecs",
+                     "sesconds","seounds","segs","segundos","senconds","seocds","seoonds",
+                     "secands","secants","seceonds","secionds","seconcs","secondsss",
+                     "seconfs","secopnd","secounts","secsonds","secthen","secx",
+                     "sceonds","scounds","secaond","mseconds","seeconds","blink",
+                     "secends","seconts","instantaneous","instant","flash"
+                     
                      ))
         s = "seconds"
 
   for (val in x)
-      if (val %in% c("hours","hour","hrs","hr"))
+      if (val %in% c("hours","hour","hrs","hr","hous","tohour",
+                     "hiours","hm","horas","houres","hourish","hoursmin",
+                     "onehour","houl","housr","nours","houra","hrmin"
+                     
+                     ))
         s = "hours"
+
+  for (val in x)
+    if (val %in% c("days","day","year","years","month","months","lifes","life","week",
+                   "summer","nite","winter","daily","allways","ongoing","weeks",
+                   "daytime","months","weeks","every","months","nights","yrs",
+                   "wks","night"))
+      s = "day_or_more"
   
-  # s
-  if(!is.na(s))
-    s
-  else
-    paste(x,collapse=" ")
+    
+  s
+  # if(!is.na(s))
+  #   s
+  # else
+  #   paste(x,collapse=" ")
   
   }))
 
+d <- 
+  unlist(word_category, recursive = FALSE) %>% 
+  as_tibble() %>% 
+  cbind(duration_dataset)
 
-l <- unlist(d, recursive = FALSE) %>% 
-  as_tibble()%>%
-  count(value) %>%
-  arrange(n)
-
-
-
-d <-
-  duration_dataset %>% # head() %>%
-  distinct(words) %>%
-  arrange(words)
-
-d <-
-  duration_dataset %>% # head() %>%
-  count(pattern) %>%
+d2 <- d %>% filter(str_trim(value) == "")
+d3 <- 
+  d %>% 
+  count(value) %>% 
   arrange(desc(n))
 
-
-d <-
-  duration_dataset %>% # head() %>%
-  filter(words == "")
-
-
-d <- d %>% filter(key == 56622)
-r <- map(
-  .x = d$t1,
-  .f = function(x)
-    (# x[length(x)]
-      length(x))
-)
-
-l <- unlist(r, recursive = FALSE)
