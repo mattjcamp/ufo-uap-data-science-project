@@ -64,11 +64,8 @@ duration_dataset <-
     )
   ) %>%
   mutate(words = str_to_lower(words),
-         words = str_extract_all(words, "[a-z]+"))
-
-# Pull out minutes, hours, seconds from lists
-
-word_category <- map(.x = duration_dataset$words, .f = function(x)({
+         words = str_extract_all(words, "[a-z]+"),
+         word_category = map_chr(.x = words, .f = function(x)({
   
   s <- NA
 
@@ -90,9 +87,6 @@ word_category <- map(.x = duration_dataset$words, .f = function(x)({
                      "minuteds","minutee","minutees","minutese","minuteswhile","minutets"
                      ,"minutez","minuties","minutres","minuttes","minutues","mintue","mintute",
                      "minsorlonger","inutes"
-                     
-                     
-                     
                      ))
         s = "minutes"
     
@@ -131,24 +125,26 @@ word_category <- map(.x = duration_dataset$words, .f = function(x)({
                    "daytime","months","weeks","every","months","nights","yrs",
                    "wks","night"))
       s = "day_or_more"
-  
-    
   s
-  # if(!is.na(s))
-  #   s
-  # else
-  #   paste(x,collapse=" ")
   
-  }))
+  })),
+  numbers_length = map_int(.x = numbers, .f = function(x)({
+    length(x)
+  })))
+
 
 d <- 
-  unlist(word_category, recursive = FALSE) %>% 
-  as_tibble() %>% 
-  cbind(duration_dataset)
+  duration_dataset %>% 
+  count(numbers_length)
 
-d2 <- d %>% filter(str_trim(value) == "")
-d3 <- 
-  d %>% 
-  count(value) %>% 
-  arrange(desc(n))
+s <- 
+  duration_dataset %>% 
+  filter(numbers_length == 4)
 
+# duration_dataset %>% 
+#   count(duration_category) %>% 
+#   arrange(desc(n))
+# 
+# duration_dataset %>% 
+#   count(pattern) %>% 
+#   arrange(desc(n))
