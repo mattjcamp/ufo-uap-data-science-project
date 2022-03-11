@@ -12,11 +12,18 @@ library(tidyverse)
 library(lubridate)
 library(ggplot2)
 
+# OPTIMIZE DATASET
+# nuforc_reports <- 
+#     nuforc_reports %>% 
+#     select(state, shape)
+# 
+# datadir <- sprintf("%s/%s", here::here(), "02.ufo-interactive-1")
+# 
+# save(nuforc_reports,
+#      file = sprintf("%s/%s", datadir, "nuforc_reports.rdata"))
+
 load("nuforc_reports.rdata")
-nuforc_reports <- 
-    nuforc_reports %>% 
-    mutate(date_time = ymd_hms(date_time),
-           posted = ymd(posted))
+
 d <- 
     nuforc_reports %>% 
     group_by(shape) %>% 
@@ -32,13 +39,14 @@ s <-
     distinct(state) %>% 
     filter(!is.na(state),
            !is.null(state),
-           state != "NULL")
+           state != "NULL") %>% 
+    arrange(state)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("NUFORC Dataset Interactive"),
+    titlePanel("UFO Reports in United States"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(

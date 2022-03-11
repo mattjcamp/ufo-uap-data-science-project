@@ -1,5 +1,4 @@
 
-
 library(tidyverse)
 
 datadir <- sprintf("%s/%s", here::here(), "03.clean.dataset/data")
@@ -7,7 +6,7 @@ datadir <- sprintf("%s/%s", here::here(), "03.clean.dataset/data")
 # library(data.world)
 # saved_cfg <- save_config(Sys.getenv("data.world_apikey")) # API key stored in .Renviron file
 # set_config(saved_cfg)
-#
+# 
 # nuforc_reports_download <- query(
 #   qry_sql("
 #     SELECT * FROM nuforc_reports"),
@@ -17,7 +16,7 @@ datadir <- sprintf("%s/%s", here::here(), "03.clean.dataset/data")
 #   select(key, occurred = date_time, state, city, duration, shape,
 #          latitude = city_latitude, longitude = city_longitude,
 #          text, date_posted = posted)
-#
+# 
 # save(nuforc_reports_download,
 #      file = sprintf("%s/%s", datadir, "nuforc_reports_download.rdata"))
 
@@ -130,21 +129,30 @@ duration_dataset <-
   })),
   numbers_length = map_int(.x = numbers, .f = function(x)({
     length(x)
-  })))
+  }))) %>% 
+  filter(numbers_length <= 2) %>%  # REMOVE LONG SERIES OF NUMBERS SINCE THEY WERE TOO MESSED UP
+  mutate(numbers = map_dbl(.x = numbers, .f = function(x)({
+    n <- NA
+    l <- length(x)
+    if(l == 2)
+      n <- (as.numeric(x[1]) + as.numeric(x[2])) / 2
+    if(l == 1)
+      n <- as.numeric(x[1])
+    n
+
+  }))) %>% 
+  select(key, duration_time = numbers, duration_unit = word_category)
+
+nuforc_reports <- 
+  nuforc_reports %>% 
+  left_join(duration_dataset, by = "key")
+
+nuforc_reports %>% 
+  count(duration_unit) %>% 
+  arrange(duration_unit)
+
+save(nuforc_reports,
+     file = sprintf("%s/%s", datadir, "nuforc_reports.rdata"))
 
 
-d <- 
-  duration_dataset %>% 
-  count(numbers_length)
 
-s <- 
-  duration_dataset %>% 
-  filter(numbers_length == 4)
-
-# duration_dataset %>% 
-#   count(duration_category) %>% 
-#   arrange(desc(n))
-# 
-# duration_dataset %>% 
-#   count(pattern) %>% 
-#   arrange(desc(n))
