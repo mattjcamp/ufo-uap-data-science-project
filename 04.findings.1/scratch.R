@@ -45,31 +45,46 @@ summarize_duration <- function(s){
       nuforc_reports
   }
   d %>% 
-    summarise(minutes_p01 = quantile(duration_time_in_minutes, 0.01, na.rm = TRUE),
-              minutes_p05 = quantile(duration_time_in_minutes, 0.05, na.rm = TRUE),
-              minutes_p10 = quantile(duration_time_in_minutes, 0.10, na.rm = TRUE),
-              minutes_p50 = quantile(duration_time_in_minutes, 0.50, na.rm = TRUE),
-              minutes_p90 = quantile(duration_time_in_minutes, 0.90, na.rm = TRUE),
-              minutes_p95 = quantile(duration_time_in_minutes, 0.95, na.rm = TRUE),
-              minutes_p99 = quantile(duration_time_in_minutes, 0.99, na.rm = TRUE),
-              minutes_max = max(duration_time_in_minutes))
+    summarise(
+      minutes_min = round(min(duration_time_in_minutes),4),
+      minutes_p01 = round(quantile(duration_time_in_minutes, 0.01, na.rm = TRUE),4),
+      minutes_p05 = round(quantile(duration_time_in_minutes, 0.05, na.rm = TRUE),4),
+      minutes_p10 = round(quantile(duration_time_in_minutes, 0.10, na.rm = TRUE),4),
+      minutes_p50 = round(quantile(duration_time_in_minutes, 0.50, na.rm = TRUE),4),
+      minutes_p90 = round(quantile(duration_time_in_minutes, 0.90, na.rm = TRUE),4),
+      minutes_p95 = round(quantile(duration_time_in_minutes, 0.95, na.rm = TRUE),4),
+      minutes_p99 = round(quantile(duration_time_in_minutes, 0.99, na.rm = TRUE),4),
+      minutes_max = round(max(duration_time_in_minutes)),
+      count = n()) %>% 
+    mutate(shape = ifelse(!is.na(s), s, "All Reports")) %>% 
+    select(shape,
+           count,
+           minutes_min,
+           minutes_p01,
+           minutes_p05,
+           minutes_p10,
+           minutes_p50,
+           minutes_p90,
+           minutes_p95,
+           minutes_p99,
+           minutes_max)
 }
-
-summarize_duration(NA)
 
 # Look at shapes vs duration
 
 d <- 
   nuforc_reports %>% 
   count(shape) %>% 
-  arrange(desc(n))
+  arrange(desc(n)) %>% 
+  filter(!is.na(shape))
 
-summarize_duration("light")
-summarize_duration("circle")
-summarize_duration("triangle")
-summarize_duration("fireball")
+durations_by_shape <- summarize_duration(NA)
 
-# Use map to do this for all
+for(s in d$shape){
+  durations_by_shape <- 
+    durations_by_shape %>% 
+    bind_rows(summarize_duration(s))
+}
 
 # Histogram to show duration
 
@@ -87,7 +102,7 @@ nuforc_reports %>%
 # Code to pull report text by key
 clipr::clear_clip()
 nuforc_reports %>%
-  filter(key == 3) %>% 
+  filter(key == 75379) %>% 
   select(text) %>% clipr::write_clip()
 
 library(corrr)
