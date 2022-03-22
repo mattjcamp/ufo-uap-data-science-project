@@ -70,6 +70,18 @@ summarize_duration <- function(s){
            minutes_max)
 }
 
+# Histogram to show duration
+
+nuforc_reports %>%
+  filter(duration_time_in_minutes >= .025,
+         duration_time_in_minutes <= 210) %>%
+  ggplot(aes(duration_time_in_minutes)) +
+  geom_histogram(bins = 30) +
+  labs(x="Minutes Observed",
+       y="Number of UFO Reports",
+       title="Duration of UFO Sightings") +
+  theme_minimal()
+
 # Look at shapes vs duration
 
 d <- 
@@ -86,23 +98,50 @@ for(s in d$shape){
     bind_rows(summarize_duration(s))
 }
 
-# Histogram to show duration
+# Duration Over Time
+# Have UFO sighting times stayed constant over the past 30 years?
 
-nuforc_reports %>%
-  filter(duration_time_in_minutes >= .025,
-         duration_time_in_minutes <= 210) %>%
-  ggplot(aes(duration_time_in_minutes)) +
-  geom_histogram(bins = 30) +
-  labs(x="Minutes Observed",
-       y="Number of UFO Reports",
-       title="Duration of UFO Sightings") +
-  theme_minimal()
+library(lubridate)
 
+duration_over_years <- 
+  nuforc_reports %>% 
+  mutate(month = month(occurred), year = year(occurred)) %>% 
+  select(key, year, duration_time_in_minutes) %>% 
+  group_by(year) %>% 
+  summarise(p50 = median(duration_time_in_minutes, na.rm = TRUE),
+            num_reports = n()) %>% 
+  ungroup() %>% 
+  arrange(year) %>% 
+  filter(!is.na(year))
+  
+# Histogram to show duration over time
+
+duration_over_years %>%
+  ggplot(aes(x = year, y = p50)) +
+  geom_line() +
+  labs(x="Year",
+       y="Duration in Minutes",
+       title="Duration Over Years of UFO Sightings") +
+  theme_minimal() +
+  ylim(0, 10)
+
+# LEARNINGS 1: DURATION
+# 
+# Most UFO sightings last around 3 minutes. Sightings lasting up to three days are
+# reported but are very rare compared to the shorter sightings. Most types of UFOs have
+# similar duration charactoristics with the exception of "changing" and "flash" UFO
+# types.
+# 
+# Flash type UFOs have a median of only half a second. This makes sense when you think of
+# what a flash really is. "Changing" UFOs are interesting with a median sighting time of
+# 10 minutes.
+# 
+# Around 1994 the number of reports went up and the median duration when from around 5 to 3 mins
 
 # Code to pull report text by key
 clipr::clear_clip()
 nuforc_reports %>%
-  filter(key == 75379) %>% 
+  filter(key == 88352) %>% 
   select(text) %>% clipr::write_clip()
 
 library(corrr)
