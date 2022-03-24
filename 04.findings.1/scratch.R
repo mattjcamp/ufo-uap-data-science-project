@@ -125,6 +125,85 @@ duration_over_years %>%
   theme_minimal() +
   ylim(0, 10)
 
+# TIME OF DAY AND DAY
+
+time_of_day <- 
+  nuforc_reports %>% 
+  mutate(day_of_week = wday(occurred),
+         hour = hour(occurred),
+         day = yday(occurred),
+         year = year(occurred)) %>% 
+  select(key, occurred, day_of_week, hour, day, year)
+
+# FREQ OF WEEKDAY SIGHTINGS
+
+time_of_day %>% 
+  filter(!is.na(day_of_week)) %>% 
+  group_by(day_of_week) %>% 
+  count() %>% 
+  arrange(day_of_week) %>% 
+  ungroup()
+
+# FREQ OF DAY OF YEAR SIGHTINGS
+
+day_of_year_freq <- 
+  time_of_day %>% 
+  filter(!is.na(day)) %>% 
+  group_by(day, year) %>%
+  count() %>% 
+  ungroup() %>% 
+  group_by(day) %>% 
+  summarize(total = sum(n),
+            min = min(n),
+            max = max(n),
+            mean = mean(n),
+            median = median(n),
+            p25 = quantile(n, 0.25),
+            p75 = quantile(n, 0.75)
+            ) %>% 
+  arrange(day) %>% 
+  ungroup()
+
+day_of_year_freq %>%
+  filter(day != 185) %>% # take out fourth of July to see pattern more clearly
+  ggplot(aes(x = day, y = mean)) +
+  geom_line() +
+  labs(x="Day in Year",
+       y="Mean Number of Reports",
+       title="Summary of Daily Reports") +
+  theme_minimal() 
+
+time_of_day %>%
+  group_by(day, year) %>%
+  count() %>% 
+  ungroup() %>% 
+  group_by(day) %>% 
+  ggplot(aes(x = day, y = n)) +
+  geom_smooth() +
+  labs(x="Day in Year",
+       y="Number of Reports",
+       title="Summary of Daily Reports") +
+  theme_minimal()
+
+
+# 355th day is Winter Solstice
+
+day_of_year_freq %>% 
+  filter(day == 355)
+
+day_of_year_freq %>% 
+  summarise(mean(n),median(n))
+
+# FREQ OF TIME OF DAY SIGHTINGS
+
+time_of_day %>% 
+  filter(!is.na(hour)) %>% 
+  group_by(hour) %>% 
+  count() %>% 
+  arrange(hour)
+
+
+
 # LEARNINGS 1: DURATION
 # 
 # Most UFO sightings last around 3 minutes. Sightings lasting up to three days are
