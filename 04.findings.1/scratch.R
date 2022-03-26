@@ -132,8 +132,9 @@ time_of_day <-
   mutate(day_of_week = wday(occurred),
          hour = hour(occurred),
          day = yday(occurred),
+         month = month(occurred),
          year = year(occurred)) %>% 
-  select(key, occurred, day_of_week, hour, day, year)
+  select(key, occurred, day_of_week, hour, day, month, year)
 
 # FREQ OF WEEKDAY SIGHTINGS
 
@@ -173,6 +174,8 @@ day_of_year_freq %>%
        title="Summary of Daily Reports") +
   theme_minimal() 
 
+# SMOOTHED PLOT OF DAILY REPORTS
+
 time_of_day %>%
   group_by(day, year) %>%
   count() %>% 
@@ -185,11 +188,30 @@ time_of_day %>%
        title="Summary of Daily Reports") +
   theme_minimal()
 
+# LINE PLOT OF MONTHLY REPORTS
+
+time_of_day %>%
+  group_by(month, year) %>%
+  count() %>% 
+  ungroup() %>% 
+  group_by(month) %>% 
+  summarise(mean = mean(n)) %>% 
+  filter(!is.na(month)) %>% 
+  ggplot(aes(x = month, y = mean)) +
+  geom_line() +
+  geom_point()+
+  labs(x="Month",
+       y="Mean Number of Reports",
+       title="Summary of Monthly Reports") +
+  theme_minimal() +
+  ylim(0, 300) + 
+  scale_x_continuous(breaks = 1:12)
+
 
 # 355th day is Winter Solstice
 
 day_of_year_freq %>% 
-  filter(day == 355)
+  filter(day == 145)
 
 day_of_year_freq %>% 
   summarise(mean(n),median(n))
@@ -202,7 +224,46 @@ time_of_day %>%
   count() %>% 
   arrange(hour)
 
+# FIGURE OUT IF OUR IS DAYLIGHT OR NIGHT
+# https://www.r-bloggers.com/2014/09/seeing-the-daylight-with-r/
+# NOTES have to format date with just YYYY-MM-DD
+# take care with lat/long
+library(maptools)
 
+# these functions need the lat/lon in an unusual format
+d <- nuforc_reports %>% filter(key == 84) %>% head(1)
+m_ufo <- matrix(c(d$longitude, d$latitude), nrow=1)
+# for_date <- as.POSIXct(d$occurred, tz="America/New_York")
+for_date <- as.POSIXct("2015-01-02", tz="UTC")
+sunriset(m_ufo, for_date, direction="sunrise", POSIXct.out=TRUE)
+sunriset(m_ufo, for_date, direction="sunset", POSIXct.out=TRUE)
+
+install.packages("lutz")
+library(lutz)
+
+if (require("sf")) {
+  
+  state_pts <- lapply(seq_along(state.center$x), function(i) {
+    st_point(c(state.center$x[i], state.center$y[i]))
+  })
+  
+  state_centers_sf <- st_sf(st_sfc(state_pts))
+  
+  state_centers_sf$tz <- tz_lookup(state_centers_sf)
+  
+  plot(state_centers_sf[, "tz"])
+}
+
+library(maptools)
+
+# these functions need the lat/lon in an unusual format
+portsmouth <- matrix(c(-70.762553, 43.071755), nrow=1)
+for_date <- as.POSIXct("2014-12-25", tz="America/New_York")
+sunriset(portsmouth, for_date, direction="sunrise", POSIXct.out=TRUE)
+sunriset(portsmouth, for_date, direction="sunset", POSIXct.out=TRUE)
+
+##         day_frac                time
+## newlon 0.3007444 2014-12-25 07:13:04
 
 # LEARNINGS 1: DURATION
 # 
@@ -220,8 +281,43 @@ time_of_day %>%
 # Code to pull report text by key
 clipr::clear_clip()
 nuforc_reports %>%
-  filter(key == 88352) %>% 
+  filter(key == 14063) %>% 
   select(text) %>% clipr::write_clip()
+
+# EXPLORE KMEANS
+
+df1 <- 
+  nuforc_reports %>% 
+  filter(!is.na(latitude),
+         !is.na(longitude),
+         !is.na(duration_time_in_minutes)) 
+# %>% 
+#   select(key, latitude, longitude, duration_time_in_minutes)
+  # select(duration_time_in_minutes)
+
+df <- 
+  df1 %>% 
+  select(duration_time_in_minutes) %>% 
+  scale()
+
+head(df, n = 3)
+
+set.seed(123)
+km.res <- kmeans(df, 6, nstart = 25)
+print(km.res)
+
+dd <- cbind(df1, cluster = km.res$cluster)
+
+# MAP IT
+
+library(ggplot2)
+library(dplyr)
+require(maps)
+require(viridis)
+theme_set(
+  theme_void()
+)
+
 
 library(corrr)
 
