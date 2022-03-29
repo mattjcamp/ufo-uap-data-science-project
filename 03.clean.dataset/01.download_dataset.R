@@ -1,5 +1,8 @@
 
 library(tidyverse)
+library(lubridate)
+library(lutz)
+library(maptools)
 
 datadir <- sprintf("%s/%s", here::here(), "03.clean.dataset/data")
 
@@ -30,12 +33,46 @@ nuforc_reports <-
   nuforc_reports_download %>%
   filter(state %in% state.abb)
 
+# TRIED TO FIX TIMEZONE IN OCCURRED FIELD BUT NOTHING WOULD WORK
+
+# %>% 
+#   mutate(time_zone = tz_lookup_coords(lat = latitude, lon = longitude, method = "accurate"))
+# 
+# # ISSUE: APPEARS TO ONLY ASSIGN THE FIRST TZ IN A LIST TO THE NEW DATE
+# # (EVEN THOUGH IT ASSIGNS THE CORRECT TEXT TO DATAFRAME)
+# 
+# for (i in 1:nrow(nuforc_reports)){
+#   state <- nuforc_reports$state[i]
+#   this_timezone <- as.character(nuforc_reports$time_zone[i])
+#   this_date <- nuforc_reports$occurred[i]
+#   # new_date <- ymd_hms(this_date, tz = this_timezone)
+#   if(!is.na(this_timezone)){
+#   new_date <- ymd("2021-03-03", tz = this_timezone)
+#   } else {
+#     new_date <- ymd("2021-03-03")
+#   }
+#   # force_tz(new_date, tzone = this_timezone)
+#   if (i == 1){
+#     new_dates <- tibble(state, this_date, this_timezone, 
+#                         new_date, new_tz = tz(new_date))
+#   } else {
+#     new_dates <- bind_rows(new_dates, tibble(state, this_date, 
+#                                              this_timezone, new_date, 
+#                                              new_tz = tz(new_date)))
+#   }
+#   state <- NA
+#   this_timezone <- NA
+#   this_date <- NA
+#   new_date <- NA
+# 
+# }
+
 # 121,832 records
 
 # Fix dates
 
 library(lubridate)
-
+ 
 nuforc_reports <-
   nuforc_reports %>%
   mutate(occurred = ymd_hms(occurred),
