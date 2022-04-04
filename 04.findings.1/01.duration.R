@@ -1,5 +1,3 @@
-# TODO
-# - ADD DETAILED FIELDS UP FRONT AND ONLY IN ONE PLACE
 
 library(tidyverse)
 library(lubridate)
@@ -138,7 +136,60 @@ rm(duration_over_years)
 # note that around 1994 reported duration went down noticeable and stayed that way
 # see if there is a correlation between number of reports vs duration 
 
-# 5. TIME OF DAY DATASET (MOVE TO TOP BTW)
+# 5. TIME OF DAY DATASET
+
+# 24-hour clock	12-hour clock
+# 00:00	12.00a.m. - midnight
+# 01:00	1:00 a.m.
+# 02:00	2:00 a.m.
+# 03:00	3:00 a.m.
+# 04:00	4:00 a.m.
+# 05:00	5:00 a.m.
+# 06:00	6:00 a.m.
+# 07:00	7:00 a.m.
+# 08:00	8:00 a.m.
+# 09:00	9:00 a.m.
+# 10:00	10:00 a.m.
+# 11:00	11:00 a.m.
+# 12:00	12:00 p.[1]m. - noon
+# 13:00	1:00 p.m.
+# 14:00	2:00 p.m.
+# 15:00	3:00 p.m.
+# 16:00	4:00 p.m.
+# 17:00	5:00 p.m.
+# 18:00	6:00 p.m.
+# 19:00	7:00 p.m.
+# 20:00	8:00 p.m.
+# 21:00	9:00 p.m.
+# 22:00	10:00 p.m.
+# 23:00	11:00 p.m.
+# 00:00	12:00 a.m. - midnigh
+
+time_of_day <- 
+  ufo_duration %>% 
+  filter(!is.na(hour)) %>% 
+  group_by(hour, year) %>% 
+  count() %>% 
+  arrange(hour) %>% 
+  ungroup() %>% 
+  group_by(hour) %>% 
+  summarize(mean = mean(n, na.rm = TRUE),
+            sum = sum(n, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(hour_12 = ifelse(hour > 12, hour - 12, hour),
+         hour_12 = ifelse(hour == 0, 12, hour_12),
+         am_pm = ifelse(hour > 12, "PM", "AM"),
+         hour_label = paste0(hour_12," ", am_pm))
+
+time_of_day %>% 
+  ggplot(aes(x = hour, y = mean)) +
+  geom_col() +
+  labs(x="Hour of Day",
+       y="Average Sightings",
+       title="Sighting by Time of Day") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:23, labels = time_of_day$hour_label) +
+  coord_flip()
 
 # 6. FREQ OF WEEKDAY SIGHTINGS
 
@@ -172,12 +223,12 @@ rm(sightings_by_day_of_week)
 # 7. DAY OF YEAR SIGHTINGS
 
 day_of_year_freq <- 
-  time_of_day %>% 
-  filter(!is.na(day)) %>% 
-  group_by(day, year) %>%
+  ufo_duration %>% 
+  filter(!is.na(day_of_year)) %>% 
+  group_by(day_of_year, year) %>%
   count() %>% 
   ungroup() %>% 
-  group_by(day) %>% 
+  group_by(day_of_year) %>% 
   summarize(total = sum(n),
             min = min(n),
             max = max(n),
@@ -186,12 +237,11 @@ day_of_year_freq <-
             p25 = quantile(n, 0.25),
             p75 = quantile(n, 0.75)
             ) %>% 
-  arrange(day) %>% 
+  arrange(day_of_year) %>% 
   ungroup()
 
 day_of_year_freq %>%
-  # filter(day != 185) %>% # take out fourth of July to see pattern more clearly
-  ggplot(aes(x = day, y = mean)) +
+  ggplot(aes(x = day_of_year, y = mean)) +
   geom_line() +
   labs(x="Day in Year",
        y="Mean Number of Reports",
@@ -200,12 +250,13 @@ day_of_year_freq %>%
 
 # SMOOTHED PLOT OF DAILY REPORTS
 
-time_of_day %>%
-  group_by(day, year) %>%
+ufo_duration %>% 
+  filter(!is.na(day_of_year)) %>% 
+  group_by(day_of_year, year) %>%
   count() %>% 
   ungroup() %>% 
-  group_by(day) %>% 
-  ggplot(aes(x = day, y = n)) +
+  group_by(day_of_year) %>% 
+  ggplot(aes(x = day_of_year, y = n)) +
   geom_smooth() +
   labs(x="Day in Year",
        y="Mean Number of Reports",
@@ -214,7 +265,7 @@ time_of_day %>%
 
 # LINE PLOT OF MONTHLY REPORTS
 
-time_of_day %>%
+ufo_duration %>%
   group_by(month, year) %>%
   count() %>% 
   ungroup() %>% 
@@ -231,55 +282,7 @@ time_of_day %>%
   ylim(0, 300) + 
   scale_x_continuous(breaks = 1:12)
 
-
 # 355th day is Winter Solstice
-# 
-# day_of_year_freq %>% 
-#   summarise(mean(n),median(n))
-
-# FREQ OF TIME OF DAY SIGHTINGS
-
-time_of_day %>% 
-  filter(!is.na(hour)) %>% 
-  group_by(hour) %>% 
-  count() %>% 
-  arrange(hour)
-
-
-# STILL TRYING THINGS OUT HERE
-
-# FIGURE OUT IF OUR IS DAYLIGHT OR NIGHT
-# https://www.r-bloggers.com/2014/09/seeing-the-daylight-with-r/
-# NOTES have to format date with just YYYY-MM-DD
-# take care with lat/long
-
-
-# 
-# # these functions need the lat/lon in an unusual format
-# portsmouth <- matrix(c(-70.762553, 43.071755), nrow=1)
-# for_date <- as.POSIXct("2014-12-25", tz="America/New_York")
-# sunriset(portsmouth, for_date, direction="sunrise", POSIXct.out=TRUE)
-# sunriset(portsmouth, for_date, direction="sunset", POSIXct.out=TRUE)
-# 
-# ##         day_frac                time
-# ## newlon 0.3007444 2014-12-25 07:13:04
-
-# these functions need the lat/lon in an unusual format
-one_obs <- nuforc_reports %>% filter(key == 84) %>% head(1)
-one_obs_date <- sprintf("%s-%s-%s", year(one_obs$occurred), month(one_obs$occurred),day(one_obs$occurred))
-m_ufo <- matrix(c(one_obs$longitude, one_obs$latitude), nrow=1)
-for_date <- as.POSIXct(one_obs_date, tz="America/New_York")
-# for_date <- as.POSIXct("2015-1-2", tz="America/New_York") # NOTE WE NEED REAL TIME ZONE, date spelled out
-sunriset(m_ufo, for_date, direction="sunrise", POSIXct.out=TRUE)
-sunriset(m_ufo, for_date, direction="sunset", POSIXct.out=TRUE)
-
-# install.packages("lutz")
-
-
-tz_lookup_coords(lat = 36.35665, lon = -119.34794, method = "accurate")
-tz_lookup_coords(lat = 36.35665, lon = -119.34794, method = "fast")
-
-
 
 # LEARNINGS 1: DURATION
 # 
@@ -293,3 +296,10 @@ tz_lookup_coords(lat = 36.35665, lon = -119.34794, method = "fast")
 # 10 minutes.
 # 
 # Around 1994 the number of reports went up and the median duration when from around 5 to 3 mins
+# 1994 is also when NUFORC started to use their website as the means to report sightings:
+# 
+# The principal means used by the Center to receive sighting reports is this website, which 
+# has operated continuously since 1994.   Prior to that period, the telephone hotline and 
+# the U.S. mail were the primary means of taking reports.   
+# 
+# https://nuforc.org/about-us/
