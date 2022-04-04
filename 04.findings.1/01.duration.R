@@ -9,11 +9,10 @@ library(maptools)
 datadir <- sprintf("%s/%s", here::here(), "04.findings.1/data")
 load(file = sprintf("%s/%s", datadir, "nuforc_reports.rdata"))
 
-# 1.Build dataset specifically for analyzing duration
+# 1.BUILD DURATION DATASET
 
 ufo_duration <-
   nuforc_reports %>%
-  head(10) %>%
   mutate(
     time_in_seconds =
       case_when(
@@ -36,15 +35,12 @@ ufo_duration <-
   ) %>% 
   select(-time_in_seconds,-time_in_hours)
 
-# Summary stats duration in seconds
-#  NOTE day or more is removed from calculation
+# 2. HOW LONG (DURATION) DO MOST UFO SIGHTINGS LAST?
 
-# Histogram to show duration
-
-nuforc_reports %>%
-  filter(duration_time_in_minutes >= .025,
-         duration_time_in_minutes <= 210) %>%
-  ggplot(aes(duration_time_in_minutes)) +
+ufo_duration %>%
+  filter(time_in_minutes >= .025,
+         time_in_minutes <= 210) %>%
+  ggplot(aes(time_in_minutes)) +
   geom_histogram(bins = 30) +
   labs(x="Minutes Observed",
        y="Number of UFO Reports",
@@ -56,23 +52,23 @@ nuforc_reports %>%
 duration_for_shape <- function(s){
   if(!is.na(s)){
     d <- 
-      nuforc_reports %>% 
+      ufo_duration %>% 
       filter(shape == s)
   } else {
     d <- 
-      nuforc_reports
+      ufo_duration
   }
   d %>% 
     summarise(
-      minutes_min = round(min(duration_time_in_minutes),4),
-      minutes_p01 = round(quantile(duration_time_in_minutes, 0.01, na.rm = TRUE),4),
-      minutes_p05 = round(quantile(duration_time_in_minutes, 0.05, na.rm = TRUE),4),
-      minutes_p10 = round(quantile(duration_time_in_minutes, 0.10, na.rm = TRUE),4),
-      minutes_p50 = round(quantile(duration_time_in_minutes, 0.50, na.rm = TRUE),4),
-      minutes_p90 = round(quantile(duration_time_in_minutes, 0.90, na.rm = TRUE),4),
-      minutes_p95 = round(quantile(duration_time_in_minutes, 0.95, na.rm = TRUE),4),
-      minutes_p99 = round(quantile(duration_time_in_minutes, 0.99, na.rm = TRUE),4),
-      minutes_max = round(max(duration_time_in_minutes)),
+      minutes_min = round(min(time_in_minutes),4),
+      minutes_p01 = round(quantile(time_in_minutes, 0.01, na.rm = TRUE),4),
+      minutes_p05 = round(quantile(time_in_minutes, 0.05, na.rm = TRUE),4),
+      minutes_p10 = round(quantile(time_in_minutes, 0.10, na.rm = TRUE),4),
+      minutes_p50 = round(quantile(time_in_minutes, 0.50, na.rm = TRUE),4),
+      minutes_p90 = round(quantile(time_in_minutes, 0.90, na.rm = TRUE),4),
+      minutes_p95 = round(quantile(time_in_minutes, 0.95, na.rm = TRUE),4),
+      minutes_p99 = round(quantile(time_in_minutes, 0.99, na.rm = TRUE),4),
+      minutes_max = round(max(time_in_minutes)),
       count = n()) %>% 
     mutate(shape = ifelse(!is.na(s), s, "All Reports")) %>% 
     select(shape,
@@ -104,15 +100,25 @@ for(s in shapes$shape){
 
 rm(shapes)
 
+durations_by_shape %>% 
+  filter(count > 10) %>% # REMOVE OUTLIERS
+  ggplot(aes(x = shape, y = minutes_p50)) +
+  geom_col() +
+  labs(x="UFO Shape",
+       y="Medium Minutes",
+       title="Sighting Duration by Shape") +
+  theme_minimal() +
+  coord_flip()
+
 # 4. DURATION OVER YEARS
 # Have UFO sighting times stayed constant over the past 30 years?
 
 duration_over_years <- 
-  nuforc_reports %>% 
-  mutate(month = month(occurred), year = year(occurred)) %>% 
-  select(key, year, duration_time_in_minutes) %>% 
+  ufo_duration %>% 
+  mutate(month = month, year = year) %>% 
+  select(key, year, time_in_minutes) %>% 
   group_by(year) %>% 
-  summarise(p50 = median(duration_time_in_minutes, na.rm = TRUE),
+  summarise(p50 = median(time_in_minutes, na.rm = TRUE),
             num_reports = n()) %>% 
   ungroup() %>% 
   arrange(year) %>% 
@@ -127,30 +133,41 @@ duration_over_years %>%
   theme_minimal() +
   ylim(0, 10)
 
+rm(duration_over_years)
+
 # note that around 1994 reported duration went down noticeable and stayed that way
 # see if there is a correlation between number of reports vs duration 
 
 # 5. TIME OF DAY DATASET (MOVE TO TOP BTW)
 
-# DEPRICATED
-# time_of_day <- 
-#   nuforc_reports %>% 
-#   mutate(day_of_week = wday(occurred),
-#          hour = hour(occurred),
-#          day = yday(occurred),
-#          month = month(occurred),
-#          year = year(occurred)) %>% 
-#   select(key, occurred, day_of_week, hour, day, month, year)
-
 # 6. FREQ OF WEEKDAY SIGHTINGS
-# NOTE SHOULD PLOT THIS
 
-time_of_day %>% 
+sightings_by_day_of_week <- 
+  ufo_duration %>% 
   filter(!is.na(day_of_week)) %>% 
   group_by(day_of_week) %>% 
   count() %>% 
   arrange(day_of_week) %>% 
   ungroup()
+
+ufo_duration %>% 
+  filter(!is.na(day_of_week)) %>% 
+  group_by(day_of_week,day_of_month, month) %>% 
+  count() %>% 
+  ungroup() %>% 
+  group_by(day_of_week) %>% 
+  summarize(mean = mean(n)) %>% 
+  arrange(day_of_week) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = day_of_week, y = mean)) +
+  geom_col() +
+  labs(x="Day of Week",
+       y="Average Sightings",
+       title="Average Number of UFO Sightings") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 1:7)
+
+rm(sightings_by_day_of_week)
 
 # 7. DAY OF YEAR SIGHTINGS
 
