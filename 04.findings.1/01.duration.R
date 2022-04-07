@@ -45,6 +45,33 @@ ufo_duration %>%
        title="Duration of UFO Sightings") +
   theme_minimal()
 
+ufo_duration %>%
+  filter(time_in_minutes >= .05,
+         time_in_minutes <= 10) %>%
+  ggplot(aes(time_in_minutes)) +
+  geom_histogram(bins = 10) +
+  labs(x="Minutes Observed",
+       y="Number of UFO Reports",
+       title="Duration of UFO Sightings") +
+  scale_x_continuous(breaks = 0:10)
+  theme_minimal()
+
+time_in_minutes <- 
+  ufo_duration %>% 
+  group_by(time_in_minutes) %>% 
+  count() %>% 
+  arrange(time_in_minutes) %>% 
+  ungroup()
+
+d <- 
+  ufo_duration %>% 
+  filter(time_in_minutes == 3)
+
+clipr::clear_clip()
+nuforc_reports %>%
+  filter(key == 44692) %>% 
+  select(text) %>% clipr::write_clip()
+
 # 3. DURATION BY SHAPE
 
 duration_for_shape <- function(s){
@@ -58,11 +85,13 @@ duration_for_shape <- function(s){
   }
   d %>% 
     summarise(
-      minutes_min = round(min(time_in_minutes),4),
+      minutes_min = round(min(time_in_minutes, na.rm = TRUE),4),
       minutes_p01 = round(quantile(time_in_minutes, 0.01, na.rm = TRUE),4),
       minutes_p05 = round(quantile(time_in_minutes, 0.05, na.rm = TRUE),4),
       minutes_p10 = round(quantile(time_in_minutes, 0.10, na.rm = TRUE),4),
+      minutes_p25 = round(quantile(time_in_minutes, 0.25, na.rm = TRUE),4),
       minutes_p50 = round(quantile(time_in_minutes, 0.50, na.rm = TRUE),4),
+      minutes_p75 = round(quantile(time_in_minutes, 0.75, na.rm = TRUE),4),
       minutes_p90 = round(quantile(time_in_minutes, 0.90, na.rm = TRUE),4),
       minutes_p95 = round(quantile(time_in_minutes, 0.95, na.rm = TRUE),4),
       minutes_p99 = round(quantile(time_in_minutes, 0.99, na.rm = TRUE),4),
@@ -75,7 +104,9 @@ duration_for_shape <- function(s){
            minutes_p01,
            minutes_p05,
            minutes_p10,
+           minutes_p25,
            minutes_p50,
+           minutes_p75,
            minutes_p90,
            minutes_p95,
            minutes_p99,
@@ -98,6 +129,10 @@ for(s in shapes$shape){
 
 rm(shapes)
 
+durations_by_shape_cleaner <- 
+  durations_by_shape %>% 
+  select(shape, count, minutes_p25, minutes_p50, minutes_p75)
+
 durations_by_shape %>% 
   filter(count > 10) %>% # REMOVE OUTLIERS
   ggplot(aes(x = shape, y = minutes_p50)) +
@@ -107,6 +142,16 @@ durations_by_shape %>%
        title="Sighting Duration by Shape") +
   theme_minimal() +
   coord_flip()
+
+clipr::clear_clip()
+
+durations_by_shape_cleaner %>% 
+  mutate(markdown = sprintf("|%s|%i|%s|%s|%s|", shape, count, 
+                            format(minutes_p25, digits = 1,nsmall = 2),
+                            format(minutes_p50, digits = 1,nsmall = 2),
+                            format(minutes_p75, digits = 1,nsmall = 2))) %>% 
+    select(markdown) %>% 
+    clipr::write_clip()
 
 # 4. DURATION OVER YEARS
 # Have UFO sighting times stayed constant over the past 30 years?
@@ -239,6 +284,23 @@ day_of_year_freq <-
             ) %>% 
   arrange(day_of_year) %>% 
   ungroup()
+
+clipr::clear_clip()
+day_of_year_freq %>% 
+  filter(day_of_year >= 180,
+         day_of_year <= 190) %>% 
+  mutate(markdown = sprintf("|%s|%i|%s|%s|%s|%s|%s|%s|", 
+                            day_of_year, 
+                            total, 
+                            format(min, digits = 1, nsmall = 2),
+                            format(max, digits = 1, nsmall = 2),
+                            format(mean, digits = 1, nsmall = 2),
+                            format(median, digits = 1, nsmall = 2),
+                            format(p25, digits = 1, nsmall = 2),
+                            format(p75, digits = 1, nsmall = 2))) %>% 
+  select(markdown) %>% 
+  clipr::write_clip()
+
 
 day_of_year_freq %>%
   ggplot(aes(x = day_of_year, y = mean)) +
