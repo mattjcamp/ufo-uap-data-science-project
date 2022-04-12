@@ -1,15 +1,10 @@
 
-# NOTE you can try to convert each shape to a boolean field: ie 1/0 for light
-# this will allow us to include shapes but it will not create arbtirary "distances"
-# if we just coded each shape with a number
-
 library(tidyverse)
 library(lubridate)
 library(lutz)
 library(maptools)
 
 datadir <- sprintf("%s/%s", here::here(), "04.findings.1/data")
-
 load(file = sprintf("%s/%s", datadir, "nuforc_reports.rdata"))
 
 # CLEAN AND CATEGORIZE
@@ -30,10 +25,11 @@ ufo_categories <-
     year = year(occurred),
     text_length = str_length(text)
   ) %>% 
-  select(key, shape, latitude, longitude, time_in_minutes, hour, text_length) %>% 
+  select(key, shape, time_in_minutes, hour, text_length) %>% 
   filter(!is.na(shape),
          !is.na(time_in_minutes),
-         !is.na(hour)) %>%
+         !is.na(hour),
+         !is.na(text_length)) %>%
   mutate(shape = ifelse(shape == "unknown", "other", shape),
          shape = ifelse(shape == "changed", "changing", shape)) %>% 
   mutate(shape_value = 1) %>% 
@@ -41,23 +37,57 @@ ufo_categories <-
 
 # TRY SOME KMEANS
 
-d <- ufo_categories %>% na.omit()
+# d <- ufo_categories %>% na.omit()
 
 df <- 
-  d %>% 
-  select(-key, -latitude,-longitude, -crescent, -dome) %>% # had to remove NaN and NA
+  ufo_categories %>% 
+  # select(-key, -crescent, -dome) %>% # had to remove NaN and NA
+  # select(-key) %>%
+  # select(time_in_minutes, hour) %>%
+  select(time_in_minutes, text_length) %>%
   scale()
-
-# df <- na.omit(df)
-# new_DF <- df[rowSums(is.na(df)) > 0,]
-
-set.seed(123)
-km.res <- kmeans(df, centers = 10)
-print(km.res)
-obs_with_clusters <- cbind(d, cluster = km.res$cluster)
 
 # PLOT THAT STAT TO FIND OPTIMAL AMOUNT OF CLUSTERS
 
+set.seed(123)
+ratio_ss <- rep(0, 10)
+for (k in 1:10) {
+  km <- kmeans(df, k)
+  ratio_ss[k] <- km$tot.withinss / km$totss
+}
+plot(ratio_ss, type = "b", xlab = "k")
+
+km <- kmeans(df, centers = 4)
+km$size
+obs_with_clusters <- 
+  # cbind(ufo_categories, cluster = km.res$cluster) %>%
+  cbind(ufo_categories, cluster = km$cluster) %>% 
+  select(key, cluster, text_length, time_in_minutes) %>% 
+  inner_join(nuforc_reports, id = "key")
+
+d <- 
+  obs_with_clusters %>% 
+  group_by(cluster) %>% 
+  summarise(mean(text_length),
+            mean(time_in_minutes),
+            num = n())
+
+obs_with_clusters %>% 
+  # head(100) %>% 
+  ggplot(aes(x = text_length, 
+             y = time_in_minutes, 
+             color = factor(cluster))) +
+  geom_point(position = "jitter") +
+  labs(x="text_length",
+       y="time_in_minutes",
+       title="Length by Time of Day") +
+  theme_minimal() +
+  scale_colour_manual(values = c("red", "blue", "green", "black"))
+
+# NOTE you can try to convert each shape to a boolean field: ie 1/0 for light
+# this will allow us to include shapes but it will not create arbtirary "distances"
+# if we just coded each shape with a number
+# 
 # REF: http://rstudio-pubs-static.s3.amazonaws.com/186401_b8f0a5a173f74e69b9ee2c1becefcf4b.html
 # What is your optimal k?
 #   In the last exercise you made a scree plot, showing the ratio of the within cluster sum of squares to the total sum of squares.
@@ -65,57 +95,4 @@ obs_with_clusters <- cbind(d, cluster = km.res$cluster)
 # Can you tell which of the following values of k will provide a meaningful clustering with overall compact and well separated clusters? The ratio, ratio_ss, is still in your workspace.
 # 3 or 4
 # The plot shows a considerable drop for k equal to 3. Furthermore, the ratio_ss for k equal to 2 is higher than 20%.
-
-ratio_ss <- rep(0, 20)
-for (k in 1:20) {
-  km <- kmeans(df, k)
-  ratio_ss[k] <- km$tot.withinss / km$totss
-}
-plot(ratio_ss, type = "b", xlab = "k")
-
-# I would go with 12
-
-km <- kmeans(df, centers = 12)
-km$size
-obs_with_clusters <- 
-  cbind(d, cluster = km.res$cluster) %>% 
-  select(key, cluster) %>% 
-  inner_join(nuforc_reports, id = "key")
-
-d <- 
-  obs_with_clusters %>% 
-  # group_by(cluster, shape) %>% 
-  distinct(cluster, shape) %>% 
-  group_by(cluster) %>% 
-  count()
-
-# EXAMPLE
-
-library(cluster.datasets)
-data(new.haven.school.scores)
-# The dataset school_result is pre-loaded
-# school_result <-  read.csv("school_result.csv")
-school_result <- new.haven.school.scores
-# Set random seed. Don't remove this line.
-set.seed(100)
-# Explore the structure of your data
-str(school_result)
-# Initialise ratio_ss. Initialize a vector of length 7, ratio_ss, that contains all zeros.
-ratio_ss <- rep(0, 7)
-school_result <- school_result %>% select(-school)
-# Finish the for-loop
-for (k in 1:7) {
-  # Apply k-means to school_result: school_km
-  school_km <- kmeans(school_result, k, nstart = 20)
-  # Save the ratio between of WSS to TSS in kth element of ratio_ss. Save the corresponding ratio tot.withinss to totss in the vector ratio_ss at index k. These values are found in the school_km object.
-  ratio_ss[k] <- school_km$tot.withinss / school_km$totss
-}
-# Make a scree plot with type "b" (connecting the points) and xlab "k"
-plot(ratio_ss, type = "b", xlab = "k")
-
-
-
-
-
-
 
