@@ -1,7 +1,7 @@
-# 
+#
 # Sentiment Analysis of UFO reports using the NRC Lexicon
 # https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm
-# 
+#
 # NOTES
 # - Words can be marked positive or negative but that doesn't mean they would
 #   also include an emotion word
@@ -11,19 +11,19 @@ library(tidytext)
 library(textdata)
 
 nuforc_reports <-
-  read_csv("./03.clean.dataset/nuforc_reports_v2.csv")
+  read_csv("./01.build.dataset/nuforc_reports_v2.csv")
 
 # Get word tokens from description field
-tokens <- nuforc_reports %>% 
+tokens <- nuforc_reports %>%
   select(key, description) %>%
   unnest_tokens(word, description)
 
 # Remove stop words
 stop_words <- data.frame(word = stop_words$word, lexicon = "stop_words")
-tokens <- tokens %>% 
+tokens <- tokens %>%
   anti_join(stop_words)
 
-token_freq <- 
+token_freq <-
   tokens %>%
   group_by(key) %>%
   count() %>%
@@ -34,16 +34,17 @@ token_freq <-
 nrc_lexicon <- read_table("./05.text.analysis/NRC-Emotion-Lexicon-Wordlevel-v0.92.txt")
 
 # Join lexicon only for words with value = 1 indicating the emotion is present
-#   <AssociationFlag> has one of two possible values: 0 or 1. 0 indicates that 
-#   the target word has no association with affect category, whereas 1 indicates 
+#   <AssociationFlag> has one of two possible values: 0 or 1. 0 indicates that
+#   the target word has no association with affect category, whereas 1 indicates
 #   an association.
 
-tokens_sentiment <- tokens %>% 
-  inner_join(nrc_lexicon %>% filter(value == 1), 
-             by = "word", 
-             relationship = "many-to-many")
+tokens_sentiment <- tokens %>%
+  inner_join(nrc_lexicon %>% filter(value == 1),
+    by = "word",
+    relationship = "many-to-many"
+  )
 
-token_sentiment_freq_not_pos_neg <- 
+token_sentiment_freq_not_pos_neg <-
   tokens_sentiment %>%
   filter(!sentiment %in% c("negative", "positive")) %>%
   group_by(key) %>%
@@ -51,9 +52,9 @@ token_sentiment_freq_not_pos_neg <-
   rename(num_words_in_lexicon_not_pos_neg = n) %>%
   ungroup()
 
-sentiment_summary <- tokens_sentiment %>% 
-  group_by(key, sentiment) %>% 
-  summarize(sentiment_count = n()) %>% 
+sentiment_summary <- tokens_sentiment %>%
+  group_by(key, sentiment) %>%
+  summarize(sentiment_count = n()) %>%
   spread(sentiment, sentiment_count, fill = 0)
 
 # Join back to dataset
@@ -80,9 +81,10 @@ nuforc_text_analysis <-
   rowwise() %>% # Find Dominate Emotion
   mutate(
     pos = list(which.max(c_across(perc_anger:perc_trust)))[1],
-    dominate_emotion = ifelse(!is.na(num_words_in_lexicon_not_pos_neg), 
-                  c("anger", "anticipation", "disgust", "fear", "joy", "sadness", "surprise", "trust")[pos],
-                  NA)
+    dominate_emotion = ifelse(!is.na(num_words_in_lexicon_not_pos_neg),
+      c("anger", "anticipation", "disgust", "fear", "joy", "sadness", "surprise", "trust")[pos],
+      NA
+    )
   ) %>%
   ungroup() %>%
   select(-pos) %>%
@@ -91,19 +93,21 @@ nuforc_text_analysis <-
 # Save CSV
 
 nuforc_text_analysis %>%
-  write_csv("./05.text.analysis/nuforc_text_analysis.csv")
+  write_csv("./02.text.mining/nuforc_text_nrc_analysis.csv")
 
 # Data Exploration
 
 # validate text
 
 nuforc_text_analysis %>%
-  filter(key == 3) %>% select(description) %>% clipr::write_clip()
-  select(1, description, 22:33) %>%
+  filter(key == 3) %>%
+  select(description) %>%
+  clipr::write_clip()
+select(1, description, 22:33) %>%
   glimpse()
 
 tokens %>%
-  filter(key == 3) 
+  filter(key == 3)
 
 tokens_sentiment %>%
   filter(key == 3) %>%
@@ -117,7 +121,7 @@ tokens_sentiment %>%
       filter(sentiment %in% c("negative", "positive")) %>%
       count() %>%
       rename(pos_or_neg = n)
-) %>%
+  ) %>%
   left_join(
     tokens_sentiment %>%
       group_by(key) %>%
@@ -148,4 +152,6 @@ nuforc_text_analysis %>%
 # Look at one case
 
 nuforc_text_analysis %>%
-  filter(key == 348) %>% select(description) %>% clipr::write_clip()
+  filter(key == 348) %>%
+  select(description) %>%
+  clipr::write_clip()

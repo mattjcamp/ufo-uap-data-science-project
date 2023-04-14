@@ -6,7 +6,7 @@ library(maptools)
 library(sf)
 
 nuforc_reports_download <-
-  read_csv("./03.clean.dataset/nuforc_reports_download.csv") %>%
+  read_csv("./01.build.dataset/nuforc_reports_download.csv") %>%
   glimpse()
 
 nuforc_reports <-
@@ -188,7 +188,7 @@ nuforc_reports <-
   glimpse()
 
 nuforc_reports %>%
-  write_csv("./03.clean.dataset/nuforc_reports_v2.csv")
+  write_csv("./01.build.dataset/nuforc_reports_v2.csv")
   
 
 
