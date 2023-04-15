@@ -31,7 +31,7 @@ token_freq <-
   ungroup()
 
 # Get the lexicon from the downloaded file
-nrc_lexicon <- read_table("./05.text.analysis/NRC-Emotion-Lexicon-Wordlevel-v0.92.txt")
+nrc_lexicon <- read_table("./02.text.mining/NRC-Emotion-Lexicon-Wordlevel-v0.92.txt")
 
 # Join lexicon only for words with value = 1 indicating the emotion is present
 #   <AssociationFlag> has one of two possible values: 0 or 1. 0 indicates that
@@ -141,6 +141,12 @@ nuforc_text_analysis %>%
   group_by(is_positive) %>%
   count()
 
+#   is_positive      n
+#         <dbl>  <int>
+# 1           0  17290
+# 2           1 102862
+# 3          NA   5261
+
 nuforc_text_analysis %>%
   ungroup() %>%
   filter(!is.na(dominate_emotion)) %>%
@@ -149,9 +155,21 @@ nuforc_text_analysis %>%
   ungroup() %>%
   arrange(desc(n))
 
+# A tibble: 8 × 2
+#   dominate_emotion     n
+#   <chr>            <int>
+# 1 anticipation     43803
+# 2 trust            31301
+# 3 fear             15738
+# 4 sadness           8653
+# 5 joy               7014
+# 6 anger             5863
+# 7 surprise          3672
+# 8 disgust           1515
+
 # Look at one case
 
 nuforc_text_analysis %>%
-  filter(key == 348) %>%
+  filter(key == 915) %>%
   select(description) %>%
   clipr::write_clip()
