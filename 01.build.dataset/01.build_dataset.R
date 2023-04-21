@@ -207,8 +207,8 @@ nuforc_reports <-
     day_of_week,
     day_of_month,
     day_of_year,
-    -stats,
-    -city_location
+    -stats # ,
+    #-city_location
   ) %>%
   glimpse()
 
