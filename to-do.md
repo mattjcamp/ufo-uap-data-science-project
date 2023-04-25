@@ -1,0 +1,2 @@
+- tf_idf may be better for a frequency count instead of just stop words etc
+- Look into that positive vs negative word cloud
