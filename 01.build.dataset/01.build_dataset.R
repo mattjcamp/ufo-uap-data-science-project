@@ -16,7 +16,13 @@ nuforc_reports <-
   nuforc_reports_download %>%
   filter(state %in% state.abb) %>% # removes all but valid US states
   mutate(
-    date_occurred = ymd_hms(date_time),
+    date_occurred = str_remove(date_time, "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]"),
+    date_occurred = ymd(date_occurred),
+    time_occurred = str_extract(date_time, "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]"),
+    time_occurred = hms(time_occurred),
+    time_occurred_hour = hour(date_time) %>% as.integer(),
+    time_occurred_minute = minute(date_time) %>% as.integer(),
+    time_occurred_second = second(date_time) %>% as.integer(),
     date_posted = ymd(posted),
     key = row_number()
   ) %>%
@@ -186,17 +192,14 @@ nuforc_reports <-
   )) %>%
   select(
     key,
+    # datetime information
     date_occurred,
-    date_posted,
-    shape,
-    -summary,
-    description = text,
-    report_link,
-    country,
-    city,
-    state,
-    latitude = city_latitude,
-    longitude = city_longitude,
+    day_of_week,
+    day_of_month,
+    day_of_year,
+    time_occurred,
+    time_occurred_hour,
+    time_occurred_minute,
     time_zone,
     duration,
     duration_time,
@@ -204,13 +207,22 @@ nuforc_reports <-
     duration_in_hours = time_in_hours,
     duration_in_minutes = time_in_minutes,
     duration_in_seconds = time_in_seconds,
-    day_of_week,
-    day_of_month,
-    day_of_year,
+    date_posted,
+    # location information
+    country,
+    city,
+    state,
+    latitude = city_latitude,
+    longitude = city_longitude,
+    # Report details
+    shape,
+    -summary,
+    description = text,
+    report_link,
     -stats # ,
     #-city_location
   ) %>%
   glimpse()
 
 nuforc_reports %>%
-  write_csv("./01.build.dataset/nuforc_reports_v2.csv")
+  write_csv("./01.build.dataset/nuforc_reports_usa.csv")
