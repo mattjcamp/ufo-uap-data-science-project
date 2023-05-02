@@ -5,7 +5,7 @@ library(topicmodels)
 library(dplyr)
 
 nuforc_reports <-
-  read_csv("./01.build.dataset/nuforc_reports_v2.csv")
+  read_csv("./01.build.dataset/nuforc_reports_bucks.csv")
 
 nuforc_reports <- # filter to make the processing quicker
   nuforc_reports %>%

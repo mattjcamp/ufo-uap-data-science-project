@@ -11,7 +11,7 @@ library(tidytext)
 library(textdata)
 
 nuforc_reports <-
-  read_csv("./01.build.dataset/nuforc_reports_v2.csv")
+  read_csv("./01.build.dataset/nuforc_reports_bucks.csv")
 
 # Get word tokens from description field
 tokens <- nuforc_reports %>%
@@ -62,7 +62,7 @@ sentiment_summary <- tokens_sentiment %>%
 nuforc_text_analysis <-
   nuforc_reports %>%
   left_join(sentiment_summary) %>%
-  select(1:21, 27, 28, 22:26, 29:31) %>%
+  #select(1:21, 27, 28, 22:26, 29:31) %>%
   left_join(token_freq) %>%
   left_join(token_sentiment_freq_not_pos_neg) %>%
   mutate(
