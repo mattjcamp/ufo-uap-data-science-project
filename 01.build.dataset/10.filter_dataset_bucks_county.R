@@ -25,9 +25,31 @@ distances <- distm(nuforc_reports_bucks[,c("longitude", "latitude")],
 # Identify the points within 100 miles of the location of interest
 nuforc_reports_bucks <- subset(nuforc_reports_bucks, distances <= 25)
 
-nuforc_reports_bucks2 <- 
+nuforc_reports_bucks <- 
   nuforc_reports_bucks %>% 
-  filter(date_occurred >= as.Date("2012-12-30"))
+  filter(date_occurred >= as.Date("2012-12-30")) %>% 
+  select(
+    key,
+    date_occurred,                   
+    day_of_week,
+    day_of_month,
+    day_of_year,                     
+    time_occurred,
+    time_occurred_hour,           
+    time_zone,
+    duration_in_minutes,                                    
+    city,
+    latitude,                        
+    longitude,
+    shape,
+    shape_bin,                       
+    description,                 
+    perc_positive, 
+    is_positive,                     
+    dominate_emotion,                
+    afinn_sentiment_score,
+    low_information_score
+  )
 
 nuforc_reports_bucks %>%
   write_csv("./01.build.dataset/nuforc_reports_past_10_years_bucks.csv")

@@ -1,12 +1,12 @@
 library(tidyverse)
 
-nuforc <- 
-  read_csv("./01.build.dataset/nuforc_reports_bucks.csv") %>%
-  glimpse()
-
-nuforc <- 
+nuforc <-
   read_csv("./01.build.dataset/nuforc_reports_usa.csv") %>%
   glimpse()
+
+# nuforc <- 
+  # read_csv("./01.build.dataset/nuforc_reports_past_10_years_bucks.csv") %>%
+  # glimpse()
 
 # DURATION
 # Most encounters are around 3 minutes
@@ -22,9 +22,8 @@ nuforc %>%
     sd = sd(duration_in_minutes, na.rm = TRUE),
     q2 = quantile(duration_in_minutes, .25),
     q3 = quantile(duration_in_minutes, .75))
-# min    max    mean  median    sd    q2    q3
-# 0     144000  19.8      3  576.   0.5    10
-
+# min    max     mean      median    sd     q2     q3
+# 0      144000  19.8      3         576.   0.5    10
 
 d <- 
   nuforc %>% 
@@ -44,6 +43,20 @@ ggplot(
   scale_y_continuous() +
   theme_bw()
 
+nuforc %>% 
+  filter(
+    !is.na(shape),
+    shape != "unknown",
+    shape != "other") %>%
+  group_by(shape) %>% 
+  count() %>% 
+  ungroup()  %>% 
+  mutate(
+    perc = round(n/sum(n) * 100, 1)
+    ) %>% 
+  arrange(desc(n)) %>% 
+  View()
+
 # SHAPE
 # Top 10 shape types (usa sample)
 # shape         n  perc
@@ -59,18 +72,20 @@ ggplot(
 # 10 cigar      3113   3 
 
 nuforc %>% 
-  filter(
-    !is.na(shape),
-    shape != "unknown",
-    shape != "other") %>%
-  group_by(shape) %>% 
+  group_by(shape_bin) %>% 
   count() %>% 
   ungroup()  %>% 
   mutate(
     perc = round(n/sum(n) * 100, 1)
-    ) %>% 
-  arrange(desc(n)) %>% 
-  View()
+  ) %>% 
+  arrange(desc(n))
+
+# shape_bin       n  perc
+# 1 lights    36368  29  
+# 2 disks     26946  21.5
+# 3 unknowns  17032  13.6
+# 4 triangles 16807  13.4
+# 5 sphere     8124   6.5
 
 # TIME OF DAY, YEAR, WEEK ETC
 
@@ -151,77 +166,9 @@ nuforc %>%
 # 4 07/05   865   0.7
 # 5 06/15   825   0.7
 
-
-# Text Mining
-
-token_words_usa %>% 
-  read_csv("./01.build.dataset/nuforc_lexicon_usa.csv")
-
-token_freq <-
-  token_words_usa %>%
-  group_by(key) %>%
-  count() %>%
-  rename(num_words = n) %>%
-  ungroup()
-
-# These may been to be brought back in
-
-token_sentiment_freq_not_pos_neg <-
-  tokens_sentiment %>%
-  filter(!sentiment %in% c("negative", "positive")) %>%
-  group_by(key) %>%
-  count() %>%
-  rename(num_words_in_lexicon_not_pos_neg = n) %>%
-  ungroup()
-
-sentiment_summary <- tokens_sentiment %>%
-  group_by(key, sentiment) %>%
-  summarize(sentiment_count = n()) %>%
-  spread(sentiment, sentiment_count, fill = 0)
-
-# Data Exploration
-
-# validate text
-
-nuforc_text_analysis %>%
-  filter(key == 3) %>%
-  select(description) %>%
-  clipr::write_clip()
-select(1, description, 22:33) %>%
-  glimpse()
-
-tokens %>%
-  filter(key == 3)
-
-tokens_sentiment %>%
-  filter(key == 3) %>%
-  arrange(sentiment)
-
-tokens_sentiment %>%
-  distinct(key) %>%
-  left_join(
-    tokens_sentiment %>%
-      group_by(key) %>%
-      filter(sentiment %in% c("negative", "positive")) %>%
-      count() %>%
-      rename(pos_or_neg = n)
-  ) %>%
-  left_join(
-    tokens_sentiment %>%
-      group_by(key) %>%
-      filter(!sentiment %in% c("negative", "positive")) %>%
-      count() %>%
-      rename(not_pos_or_neg = n)
-  ) %>%
-  glimpse()
-
-tokens_sentiment %>%
-  filter(key == 3) %>%
-  arrange(sentiment)
-
 # Frequency
 
-nuforc_text_analysis %>%
+nuforc %>%
   group_by(is_positive) %>%
   count()
 
@@ -231,17 +178,14 @@ nuforc_text_analysis %>%
 # 2           1 102862
 # 3          NA   5261
 
-nuforc_text_analysis %>%
-  ungroup() %>%
+nuforc %>%
   filter(!is.na(dominate_emotion)) %>%
   group_by(dominate_emotion) %>%
   count() %>%
   ungroup() %>%
   arrange(desc(n))
 
-# A tibble: 8 × 2
 #   dominate_emotion     n
-#   <chr>            <int>
 # 1 anticipation     43803
 # 2 trust            31301
 # 3 fear             15738
@@ -251,9 +195,23 @@ nuforc_text_analysis %>%
 # 7 surprise          3672
 # 8 disgust           1515
 
-# Look at one case
+nuforc %>% 
+  summarize(
+    min = min(afinn_sentiment_score, na.rm = TRUE),
+    max = max(afinn_sentiment_score, na.rm = TRUE),
+    mean = mean(afinn_sentiment_score, na.rm = TRUE),
+    q1 = quantile(afinn_sentiment_score, .25,na.rm = TRUE),
+    q3 = quantile(afinn_sentiment_score, .75,na.rm = TRUE)
+  )
 
-nuforc_text_analysis %>%
-  filter(key == 915) %>%
-  select(description) %>%
-  clipr::write_clip()
+d <- 
+  nuforc %>% 
+  count(afinn_sentiment_score) %>% 
+  arrange(afinn_sentiment_score)
+
+# LOW INFORMATION SCORE
+
+nuforc %>% 
+  group_by(low_information_score) %>% 
+  count()
+

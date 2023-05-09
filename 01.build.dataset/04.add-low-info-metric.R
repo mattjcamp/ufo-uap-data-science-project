@@ -20,7 +20,8 @@ nuforc_reports <-
     afinn_sentiment_score_liz = ifelse(is.na(afinn_sentiment_score), 0, 1),
     low_information_score = 
       description_liz + time_zone_liz + duraction_liz + location_liz +
-      shape_liz + date_posted_liz + dominate_emotion_liz + afinn_sentiment_score_liz
+      shape_liz + date_posted_liz + dominate_emotion_liz + afinn_sentiment_score_liz,
+    #low_information_score = ifelse(is.na(low_information_score), 0, low_information_score)
   )  %>% 
   select(
     key,
