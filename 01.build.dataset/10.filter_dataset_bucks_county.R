@@ -25,8 +25,9 @@ distances <- distm(nuforc_reports_bucks[,c("longitude", "latitude")],
 # Identify the points within 100 miles of the location of interest
 nuforc_reports_bucks <- subset(nuforc_reports_bucks, distances <= 25)
 
-# View the resulting subset of points
-print(nuforc_reports_bucks)
+nuforc_reports_bucks2 <- 
+  nuforc_reports_bucks %>% 
+  filter(date_occurred >= as.Date("2012-12-30"))
 
 nuforc_reports_bucks %>%
-  write_csv("./01.build.dataset/nuforc_reports_bucks.csv")
+  write_csv("./01.build.dataset/nuforc_reports_past_10_years_bucks.csv")

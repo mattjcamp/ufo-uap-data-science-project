@@ -190,6 +190,18 @@ nuforc_reports <-
     day_of_week == 7 ~ "Sunday",
     TRUE ~ NA_character_
   )) %>%
+  mutate( # Shape Super Bin
+    shape_bin = case_when(
+      shape %in% c("light", "star", "fireball", "flash") ~ "lights",
+      shape %in% c("disk", "circle", "egg", "oval") ~ "disks",
+      shape %in% c("triangle", "delta", "chevron", "diamond", "rectangle") ~ "triangles",
+      shape %in% c("cigar", "cylinder") ~ "cigars",
+      shape %in% c("teardrop", "cone") ~ "teardrops",
+      shape %in% c("unknown", "other") ~ "unknowns",
+      TRUE ~ shape
+    ),
+    description_length = str_length(text)
+  ) %>% 
   select(
     key,
     # datetime information
@@ -216,10 +228,12 @@ nuforc_reports <-
     longitude = city_longitude,
     # Report details
     shape,
+    shape_bin,
     -summary,
     description = text,
+    description_length,
     report_link,
-    -stats # ,
+    -stats
     #-city_location
   ) %>%
   glimpse()
