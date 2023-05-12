@@ -51,5 +51,8 @@ nuforc_reports_bucks <-
     low_information_score
   )
 
+nuforc_reports_bucks %>% 
+  save(file = "./01.build.dataset/nuforc_reports_bucks.rdata")
+
 nuforc_reports_bucks %>%
   write_csv("./01.build.dataset/nuforc_reports_past_10_years_bucks.csv")
