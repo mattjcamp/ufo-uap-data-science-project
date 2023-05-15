@@ -46,7 +46,9 @@ fluidPage(
     hr(),
     
     htmlOutput("description"),
+    br(),
     htmlOutput("textAnalysis"),
+    tableOutput("nprTable"),
 
     
 )

@@ -22,34 +22,34 @@ distances <- distm(nuforc_reports_bucks[,c("longitude", "latitude")],
                    location, 
                    fun = distHaversine)/1609.344  # divide by 1609.344 to convert meters to miles
 
-# Identify the points within 100 miles of the location of interest
-nuforc_reports_bucks <- subset(nuforc_reports_bucks, distances <= 25)
+# Identify the points within 25 miles of the location of interest
+nuforc_reports_bucks <- subset(nuforc_reports_bucks, distances <= 20)
 
 nuforc_reports_bucks <- 
   nuforc_reports_bucks %>% 
-  filter(date_occurred >= as.Date("2012-12-30")) %>% 
-  select(
-    key,
-    date_occurred,                   
-    day_of_week,
-    day_of_month,
-    day_of_year,                     
-    time_occurred,
-    time_occurred_hour,           
-    time_zone,
-    duration_in_minutes,                                    
-    city,
-    latitude,                        
-    longitude,
-    shape,
-    shape_bin,                       
-    description,                 
-    perc_positive, 
-    is_positive,                     
-    dominate_emotion,                
-    afinn_sentiment_score,
-    low_information_score
-  )
+  filter(date_occurred >= as.Date("2012-12-30")) # %>% 
+  # select(
+  #   key,
+  #   date_occurred,                   
+  #   day_of_week,
+  #   day_of_month,
+  #   day_of_year,                     
+  #   time_occurred,
+  #   time_occurred_hour,           
+  #   time_zone,
+  #   duration_in_minutes,                                    
+  #   city,
+  #   latitude,                        
+  #   longitude,
+  #   shape,
+  #   shape_bin,                       
+  #   description,                 
+  #   perc_positive, 
+  #   is_positive,                     
+  #   dominate_emotion,                
+  #   afinn_sentiment_score,
+  #   low_information_score
+  # )
 
 nuforc_reports_bucks %>% 
   save(file = "./01.build.dataset/nuforc_reports_bucks.rdata")
