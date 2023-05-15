@@ -8,39 +8,45 @@
 
 library(tidyverse)
 library(shiny)
-library(here)
 
-nuforc_reports <- 
-  read_csv(file = "nuforc_reports_past_10_years_bucks.csv")
-
-pos <- 1
-
-
-
-# len <- nrow(nuforc_reports) %>% as.numeric()
+cities <- 
+  read_csv(file = "nuforc_reports_past_10_years_bucks.csv") %>% 
+  distinct(city) %>% 
+  arrange(city)
 
 # Define UI for application that draws a histogram
 fluidPage(
 
-    # Application title
-    # titlePanel(sprintf("Bucks County UFO Case Viewer %i", len)),
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+    ),
+  
     titlePanel("Bucks County UFO Case Viewer"),
 
-    # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
-          selectizeInput("num_case", "Case Number", 
-                         choices = nuforc_reports$key, 
-                         multiple = FALSE)
           
+          selectizeInput("city", "City/Town",
+                         choices = cities,
+                         multiple = FALSE),
+
+          uiOutput("reactiveControls"),
         ),
 
-        # Show a plot of the generated distribution
         mainPanel(
           htmlOutput("title"),
           htmlOutput("detail"),
-          htmlOutput("textAnalysis"),
-          htmlOutput("description")
-        )
-    )
+        ),
+        
+
+        
+    ),
+    
+    br(),
+    hr(),
+    
+    htmlOutput("description"),
+    htmlOutput("textAnalysis"),
+
+    
 )

@@ -15,8 +15,36 @@ library(lubridate)
 nuforc_reports <- 
   read_csv(file = "nuforc_reports_past_10_years_bucks.csv",col_types = cols(.default = "c"))
 
-function(input, output, session) {
+cities <- 
+  nuforc_reports %>% 
+  distinct(city) %>% 
+  arrange(city)
 
+function(input, output, session) {
+  
+  filteredCases <- reactive({
+    
+    cases <- 
+      nuforc_reports %>% 
+      filter(city == input$city) %>% 
+      select(case = key) %>% 
+      arrange() %>% 
+      as.list()
+  
+    cases$case
+    
+  })
+  
+  output$reactiveControls <- renderUI({
+    tagList(
+  
+      selectizeInput("num_case", "Case Number",
+                     choices = filteredCases(),
+                     multiple = FALSE)
+      
+    )
+  })
+  
     output$description <- renderText({
       if(!is.na(input$num_case)){
         nuforc_reports %>% 
@@ -66,9 +94,6 @@ function(input, output, session) {
         
         t <- format(t, "%I:%M%p")
         
-        
-        print(time_occurred)
-        
         day_occurred <- 
           nuforc_reports %>% 
           filter(key == input$num_case) %>% 
@@ -77,9 +102,8 @@ function(input, output, session) {
         
         formatted <- paste(
           "<span style='font-weight: bold;'>",
-          "Location",
-          "</span><br/>",
           city,
+          "</span>",
           "<br/><span style='font-weight: light;font-size:smaller'>",
           day_occurred, date_occurred, t,
           "</span>"
@@ -98,8 +122,6 @@ function(input, output, session) {
           select(shape_bin) %>% 
           as.character()
         
-        print(shape_bin)
-        
         shape <- 
           nuforc_reports %>% 
           filter(key == input$num_case) %>% 
@@ -107,14 +129,24 @@ function(input, output, session) {
           as.character()
         
         d <- ifelse(shape_bin == shape, shape_bin, sprintf("%s -> %s", shape_bin, shape))
-
-        #print(d)
+        
+        duration <- 
+          nuforc_reports %>% 
+          filter(key == input$num_case) %>% 
+          select(duration_in_minutes) %>% 
+          as.character()
         
         formatted <- paste(
           "<span style='font-weight: bold;'>",
           "Shape",
           "</span>",
-          d
+          d,
+          "<br/><span style='font-weight: bold;'>",
+          "Duration",
+          "</span>",
+          duration,
+          "minutes"
+          
         )
         
         HTML(formatted)
