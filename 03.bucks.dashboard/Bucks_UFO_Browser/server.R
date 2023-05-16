@@ -26,7 +26,7 @@ function(input, output, session) {
   filteredCases <- reactive({
     cases <-
       nuforc_reports %>%
-      filter(city == input$city) %>%
+      #filter(city == input$city) %>%
       select(case = key) %>%
       arrange() %>%
       as.list()

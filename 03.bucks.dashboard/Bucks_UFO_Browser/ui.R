@@ -26,9 +26,9 @@ fluidPage(
     sidebarLayout(
         sidebarPanel(
           
-          selectizeInput("city", "City/Town",
-                         choices = cities,
-                         multiple = FALSE),
+          # selectizeInput("city", "City/Town",
+          #                choices = cities,
+          #                multiple = FALSE),
 
           uiOutput("reactiveControls"),
         ),

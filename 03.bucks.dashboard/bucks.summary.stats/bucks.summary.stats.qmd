@@ -1,0 +1,59 @@
+---
+title: "Bucks UFO Reports"
+author: "Matt Campbell"
+format: html
+editor: visual
+message: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(lubridate)
+
+nuforc_reports <-
+  read_csv(file = "nuforc_reports_past_10_years_bucks.csv", 
+           col_types = cols(.default = "c"))
+
+case_count <- 
+  nuforc_reports %>% 
+  count() %>% 
+  as.numeric()
+```
+
+## Summary
+
+This is a study of all the UFO cases reported to NUFORC near Doylestown located in Bucks County, PA. This dataset contains `r case_count` cases gathered over the past ten years.
+
+## UFO Shapes
+
+Reported UFO shapes were put into bins since many of the listed descriptions are very similar. For instance, circles, ovals, and all disks are counted as disks. The original reported shapes are retained in the dataset and these can be seem while viewing the case dashboard.
+
+```{r}
+#| echo: false
+
+shape_freq <- 
+  nuforc_reports %>% 
+  mutate(
+    shape_bin = ifelse(is.na(shape_bin), "unknowns", shape_bin)
+    ) %>% 
+  count(shape_bin) %>% 
+  arrange(desc(n))
+
+#shape_freq
+
+ggplot(shape_freq, aes(x = reorder(shape_bin, n), y = n)) +
+  geom_bar(stat = "identity") +
+  xlab("UFO Shape") +
+  ylab("Frequency") +
+  ggtitle("UFO Shapes") +
+  coord_flip() +
+  theme_minimal()
+
+```
+
+Most reports were lights, disks, or simply unknown. The majority of the case reports can be categorized as "Strange Lights in the Sky" even when they are marked off as disks or unknown.
