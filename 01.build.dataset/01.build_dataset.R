@@ -181,13 +181,13 @@ nuforc_reports <-
     )
   ) %>%
   mutate(day_of_week = case_when(
-    day_of_week == 1 ~ "Monday",
-    day_of_week == 2 ~ "Tuesday",
-    day_of_week == 3 ~ "Wednesday",
-    day_of_week == 4 ~ "Thursday",
-    day_of_week == 5 ~ "Friday",
-    day_of_week == 6 ~ "Saturday",
-    day_of_week == 7 ~ "Sunday",
+    day_of_week == 1 ~ "Sunday",
+    day_of_week == 2 ~ "Monday",
+    day_of_week == 3 ~ "Tuesday",
+    day_of_week == 4 ~ "Wednesday",
+    day_of_week == 5 ~ "Thursday",
+    day_of_week == 6 ~ "Friday",
+    day_of_week == 7 ~ "Saturday",
     TRUE ~ NA_character_
   )) %>%
   mutate( # Shape Super Bin
