@@ -1,0 +1,110 @@
+---
+title: "Bucks County UFO Text Analysis"
+format: html
+message: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(lubridate)
+library(tidytext)
+
+nuforc_reports <-
+  read_csv(file = "nuforc_reports_past_10_years_bucks.csv", 
+           col_types = cols(.default = "c"))
+
+case_count <- 
+  nuforc_reports %>% 
+  count() %>% 
+  as.numeric()
+
+```
+
+## Summary
+
+## Word Frequency tf-idf
+
+```{r}
+#| echo: false
+
+case_descriptions <- 
+  nuforc_reports %>% 
+  select(case = key, description)
+  
+case_words <- case_descriptions %>%
+  unnest_tokens(word, description) %>%
+  count(case, word, sort = TRUE)
+
+total_words <- case_words %>% 
+  group_by(case) %>% 
+  summarize(total = sum(n))
+
+case_words <- 
+  case_words %>% 
+  left_join(total_words)
+
+case_words
+
+```
+
+```{r}
+#| echo: false
+
+freq_by_rank <- case_words %>% 
+  group_by(case) %>% 
+  mutate(rank = row_number(), 
+         `term frequency` = n/total) %>%
+  ungroup()
+
+freq_by_rank
+
+freq_by_rank %>% 
+  filter(case %in% c("88434", "87243", "90975", "83186", "112853")) %>% 
+  ggplot(aes(rank, `term frequency`, color = case)) + 
+  geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+
+case_tf_idf <- case_words %>%
+  bind_tf_idf(word, case, n)
+
+library(forcats)
+
+case_tf_idf %>%
+  filter(case %in% c("88434", "87243", "90975", "83186")) %>% 
+  group_by(case) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = case)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~case, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+
+```
+
+## Word Cloud
+
+```{r}
+#| echo: false
+
+tidy_cases <- case_descriptions %>%
+  ungroup() %>%
+  unnest_tokens(word, description)
+
+library(reshape2)
+library(wordcloud)
+
+tidy_cases %>%
+  #filter(word != "object") %>% 
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("darkred", "darkgreen"),
+                   max.words = 150)
+
+```
