@@ -108,3 +108,130 @@ tidy_cases %>%
                    max.words = 150)
 
 ```
+
+## Ngrams
+
+### Bigrams
+
+```{r}
+#| echo: false
+
+bigrams <- case_descriptions %>%
+  unnest_tokens(bigram, description, token = "ngrams", n = 2) %>%
+  filter(!is.na(bigram))
+
+bigrams %>%
+  count(bigram, sort = TRUE)
+
+library(tidyr)
+
+bigrams_separated <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+bigram_counts <- bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+bigrams_united <- bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+bigram_tf_idf <- bigrams_united %>%
+  count(case, bigram) %>%
+  bind_tf_idf(bigram, case, n) %>%
+  arrange(desc(tf_idf))
+
+bigram_tf_idf
+
+```
+### Network Graphs
+
+```{r}
+#| echo: false
+
+library(igraph)
+
+bigram_counts
+
+bigram_graph <- bigram_counts %>%
+  # filter(n > 20) %>%
+  # filter(n > 3) %>% # best for bucks dataset
+  filter(n > 2) %>%
+  graph_from_data_frame()
+
+
+library(ggraph)
+set.seed(2017)
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+set.seed(2020)
+
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+
+```
+
+### Word Correlations
+
+```{r}
+
+library(widyr)
+
+word_cors <- case_words %>%
+  select(case, word) %>% 
+  group_by(word) %>%
+  filter(n() >= 20) %>%
+  pairwise_cor(word, case, sort = TRUE)
+
+```
+
+### Trigrams
+
+```{r}
+#| echo: false
+
+trigrams <- case_descriptions %>%
+  unnest_tokens(trigram, description, token = "ngrams", n = 3) %>%
+  filter(!is.na(trigram))
+
+trigrams %>%
+  count(trigram, sort = TRUE)
+
+library(tidyr)
+
+trigrams_separated <- trigrams %>%
+  separate(trigram, c("word1", "word2", "word3"), sep = " ")
+
+trigrams_filtered <- trigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>% 
+  filter(!word3 %in% stop_words$word)
+
+# new trigram counts:
+trigram_counts <- trigrams_filtered %>% 
+  count(word1, word2, word3, sort = TRUE)
+
+trigrams_united <- trigrams_filtered %>%
+  unite(trigram, word1, word2, word3, sep = " ")
+
+trigram_tf_idf <- trigrams_united %>%
+  count(case, trigram) %>%
+  bind_tf_idf(trigram, case, n) %>%
+  arrange(desc(tf_idf))
+
+trigram_tf_idf
+
+```
