@@ -100,7 +100,7 @@ library(reshape2)
 library(wordcloud)
 
 tidy_cases %>%
-  #filter(word != "object") %>% 
+  filter(word != "object") %>% 
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
   acast(word ~ sentiment, value.var = "n", fill = 0) %>%

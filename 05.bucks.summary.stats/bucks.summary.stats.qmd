@@ -7,7 +7,7 @@ message: FALSE
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 ```{r}
@@ -16,13 +16,15 @@ library(tidyverse)
 library(lubridate)
 
 nuforc_reports <-
-  read_csv(file = "nuforc_reports_past_10_years_bucks.csv", 
-           col_types = cols(.default = "c"))
+    read_csv(
+        file = "nuforc_reports_past_10_years_bucks.csv",
+        col_types = cols(.default = "c")
+    )
 
-case_count <- 
-  nuforc_reports %>% 
-  count() %>% 
-  as.numeric()
+case_count <-
+    nuforc_reports %>%
+    count() %>%
+    as.numeric()
 ```
 
 ## Summary
@@ -40,21 +42,21 @@ Reported UFO shapes were put into bins since many of the listed descriptions are
 ```{r}
 #| echo: false
 
-shape_freq <- 
-  nuforc_reports %>% 
-  mutate(
-    shape_bin = ifelse(is.na(shape_bin), "unknowns", shape_bin)
-    ) %>% 
-  count(shape_bin) %>% 
-  arrange(desc(n))
+shape_freq <-
+    nuforc_reports %>%
+    mutate(
+        shape_bin = ifelse(is.na(shape_bin), "unknowns", shape_bin)
+    ) %>%
+    count(shape_bin) %>%
+    arrange(desc(n))
 
 ggplot(shape_freq, aes(x = reorder(shape_bin, n), y = n)) +
-  geom_bar(stat = "identity") +
-  xlab("UFO Shape") +
-  ylab("Frequency") +
-  ggtitle("UFO Shapes") +
-  coord_flip() +
-  theme_minimal()
+    geom_bar(stat = "identity") +
+    xlab("UFO Shape") +
+    ylab("Frequency") +
+    ggtitle("UFO Shapes") +
+    coord_flip() +
+    theme_minimal()
 
 ```
 
@@ -67,25 +69,25 @@ After shapes, the next most defining part of a UFO report is the time of day the
 ```{r}
 #| echo: false
 
-time_of_day_freq <- 
-  nuforc_reports %>% 
-  select(time_occurred, key, time_occurred_hour) %>% 
-  mutate(
-    time_occurred = as.POSIXlt("2023-05-12") + as.period(time_occurred),
-    time_occurred = format(time_occurred, "%I:%M%p"),
-    time_of_day = paste(str_extract(time_occurred, "[A-Z][A-Z]"), str_remove(time_occurred, ":[0-9][0-9]")),
-    am_pm = str_extract(time_occurred, "[A-Z][A-Z]")
-  ) %>% 
-  count(am_pm, time_of_day) %>% 
-  arrange(am_pm, desc(time_of_day))
+time_of_day_freq <-
+    nuforc_reports %>%
+    select(time_occurred, key, time_occurred_hour) %>%
+    mutate(
+        time_occurred = as.POSIXlt("2023-05-12") + as.period(time_occurred),
+        time_occurred = format(time_occurred, "%I:%M%p"),
+        time_of_day = paste(str_extract(time_occurred, "[A-Z][A-Z]"), str_remove(time_occurred, ":[0-9][0-9]")),
+        am_pm = str_extract(time_occurred, "[A-Z][A-Z]")
+    ) %>%
+    count(am_pm, time_of_day) %>%
+    arrange(am_pm, desc(time_of_day))
 
 ggplot(time_of_day_freq, aes(x = time_of_day, y = n)) +
-  geom_bar(stat = "identity") +
-  xlab("Time of Day") +
-  ylab("Frequency") +
-  ggtitle("Time of Day When UFOs are Reported") +
-  coord_flip() +
-  theme_minimal()
+    geom_bar(stat = "identity") +
+    xlab("Time of Day") +
+    ylab("Frequency") +
+    ggtitle("Time of Day When UFOs are Reported") +
+    coord_flip() +
+    theme_minimal()
 
 ```
 
@@ -98,18 +100,18 @@ What days of the week are people seeing UFOs?
 ```{r}
 #| echo: false
 
-day_of_week_freq <- 
-  nuforc_reports %>% 
-  select(day_of_week) %>% 
-  count(day_of_week)
+day_of_week_freq <-
+    nuforc_reports %>%
+    select(day_of_week) %>%
+    count(day_of_week)
 
 ggplot(day_of_week_freq, aes(x = reorder(day_of_week, n), y = n)) +
-  geom_bar(stat = "identity") +
-  xlab("Day Of Week") +
-  ylab("Frequency") +
-  ggtitle("Day Of Week") +
-  coord_flip() +
-  theme_minimal()
+    geom_bar(stat = "identity") +
+    xlab("Day Of Week") +
+    ylab("Frequency") +
+    ggtitle("Day Of Week") +
+    coord_flip() +
+    theme_minimal()
 
 ```
 
@@ -128,23 +130,23 @@ How long do UFO events take to unfold? We know from other analysis that the majo
 ```{r}
 #| echo: false
 
-duration <- 
-  nuforc_reports %>% 
-  select(duration_in_minutes) %>% 
-  filter(!is.na(duration_in_minutes)) %>% 
-  mutate(
-    duration_in_minutes = as.numeric(duration_in_minutes)
-  )
+duration <-
+    nuforc_reports %>%
+    select(duration_in_minutes) %>%
+    filter(!is.na(duration_in_minutes)) %>%
+    mutate(
+        duration_in_minutes = as.numeric(duration_in_minutes)
+    )
 
 library(ggplot2)
 
 # Assuming your dataset is named 'data' and the column is 'duration_in_minutes'
 ggplot(duration, aes(duration_in_minutes)) +
-  geom_boxplot() +
-  #scale_y_log10() +
-  scale_x_log10() +
-  ggtitle("Box Plot of Duration (log scale)") +
-  theme_minimal()
+    geom_boxplot() +
+    # scale_y_log10() +
+    scale_x_log10() +
+    ggtitle("Box Plot of Duration (log scale)") +
+    theme_minimal()
 
 ```
 
@@ -165,43 +167,43 @@ Below is a summary of these assignments that we can use to paint a picture of th
 ```{r}
 #| echo: false
 
-tones <- 
-  nuforc_reports %>% 
-  select(
-    perc_anger, 
-    perc_anticipation,
-    perc_disgust,
-    perc_fear,
-    perc_joy,
-    perc_sadness,
-    perc_surprise,
-    perc_trust
-  ) %>% 
-  mutate(
-    perc_anger = perc_anger %>% as.numeric(), 
-    perc_anticipation = perc_anticipation %>% as.numeric(),
-    perc_disgust = perc_disgust %>% as.numeric(),
-    perc_fear = perc_fear %>% as.numeric(),
-    perc_joy = perc_joy %>% as.numeric(),
-    perc_sadness = perc_sadness %>% as.numeric(),
-    perc_surprise = perc_surprise %>% as.numeric(),
-    perc_trust = perc_trust %>% as.numeric()
-  ) %>% 
-  summarise(
-    anger = mean(perc_anger, na.rm = TRUE),
-    anticipation = mean(perc_anticipation, na.rm = TRUE),
-    disgust = mean(perc_disgust, na.rm = TRUE),
-    joy = mean(perc_joy, na.rm = TRUE),
-    sadness = mean(perc_sadness, na.rm = TRUE),
-    surprise = mean(perc_surprise, na.rm = TRUE),
-    trust = mean(perc_trust, na.rm = TRUE),
-    fear = mean(perc_fear, na.rm = TRUE)
-  )
+tones <-
+    nuforc_reports %>%
+    select(
+        perc_anger,
+        perc_anticipation,
+        perc_disgust,
+        perc_fear,
+        perc_joy,
+        perc_sadness,
+        perc_surprise,
+        perc_trust
+    ) %>%
+    mutate(
+        perc_anger = perc_anger %>% as.numeric(),
+        perc_anticipation = perc_anticipation %>% as.numeric(),
+        perc_disgust = perc_disgust %>% as.numeric(),
+        perc_fear = perc_fear %>% as.numeric(),
+        perc_joy = perc_joy %>% as.numeric(),
+        perc_sadness = perc_sadness %>% as.numeric(),
+        perc_surprise = perc_surprise %>% as.numeric(),
+        perc_trust = perc_trust %>% as.numeric()
+    ) %>%
+    summarise(
+        anger = mean(perc_anger, na.rm = TRUE),
+        anticipation = mean(perc_anticipation, na.rm = TRUE),
+        disgust = mean(perc_disgust, na.rm = TRUE),
+        joy = mean(perc_joy, na.rm = TRUE),
+        sadness = mean(perc_sadness, na.rm = TRUE),
+        surprise = mean(perc_surprise, na.rm = TRUE),
+        trust = mean(perc_trust, na.rm = TRUE),
+        fear = mean(perc_fear, na.rm = TRUE)
+    )
 
 # Assuming your dataset is named 'data'
 transposed_data <- tones %>%
-  pivot_longer(cols = everything(), names_to = "column", values_to = "value") %>% 
-  arrange(desc(value))
+    pivot_longer(cols = everything(), names_to = "column", values_to = "value") %>%
+    arrange(desc(value))
 
 # Print the transposed dataset
 transposed_data
@@ -211,3 +213,32 @@ transposed_data
 Trust, anticipation, and fear are the dominate emotions based on this analysis. This finding also reflects what I've found in the larger dataset. It would be interesting to try to get to why these are the emotions that seem to pop up. It could be that "trust" is being picked up because these reports are also mentioning things like law enforcement or some other authority.
 
 Many of the reports include things like explosions or fireballs that would be associated with fear and anticipation along with fear makes me think of the adrenaline that some of these reporters are experiencing.
+
+## UFO Sightings Trend
+
+```{r}
+#| echo: false
+
+years <-
+  nuforc_reports %>%
+  select(
+    date_occurred
+    ) %>% 
+  mutate(
+    year = year(date_occurred),
+    year = as.character(year)
+  ) %>% 
+  group_by(year) %>% 
+  count() %>% 
+  arrange(year)
+
+ggplot(years, aes(x = as.numeric(year), y = n)) +
+    geom_point(stat = "identity") +
+    geom_line(stat = "identity", color = "blue") +
+    xlab("Year") +
+    ylab("Frequency") +
+    ggtitle("UFO Sightings by Year") +
+    theme_minimal() +
+  scale_x_continuous(breaks = as.numeric(years$year))
+
+```
