@@ -11,6 +11,7 @@ library(leaflet)
 library(leaflet.extras)
 library(tidyverse)
 library(htmltools)
+library(htmlwidgets)
 
 nuforc <- 
   read_csv("./03.bucks.dashboards/Bucks_UFO_Browser_v3/nuforc_reports_past_10_years_bucks.csv") %>% 
@@ -20,7 +21,11 @@ nuforc <-
     longitude,
     city,
     shape_bin,
-    date_occurred
+    shape,
+    time_occurred,
+    duration,
+    date_occurred,
+    description
   ) %>%
   filter(
     year(date_occurred) == 2022
@@ -36,19 +41,32 @@ nuforc %>%
     color = ~
       case_when(
         shape_bin == "lights" ~ "red",
-        shape_bin == "disks" ~ "blue",
-        shape_bin == "triangles" ~ "darkgray",
-        shape_bin == "cigars" ~ "yellow",
+        shape_bin == "disks" ~ "green",
+        shape_bin == "triangles" ~ "black",
+        shape_bin == "cigars" ~ "blue",
         shape_bin == "teardrops" ~ "orange",
-        TRUE ~ "black"
+        TRUE ~ "gray"
       ),
     clusterOptions = markerClusterOptions(),
-    label = ~sprintf("Case %s %s %s %s", key, city, shape_bin, date_occurred)
+    label = ~sprintf("%s | %s | %s", city, shape_bin, date_occurred),
+    popup = ~sprintf(
+      "<h3>%s %s</h3>%s %s <br>%s | %s > %s %s</p><p>%s</p>", 
+      city, str_to_title(shape), 
+      date_occurred, format(strptime(time_occurred, format = "%HH %MM %SS"), format = "%I:%M %p"), 
+      key, shape_bin, shape, duration,
+      description)
   )
 
+content <- paste(sep = "<br/>",
+                 "<b><a href='http://www.samurainoodle.com'>Samurai Noodle</a></b>",
+                 "606 5th Ave. S",
+                 "Seattle, WA 98138"
+)
 
-
-
+leaflet() %>% addTiles() %>%
+  addPopups(-122.327298, 47.597131, content,
+            options = popupOptions()
+  )
 
   
 # CUSTOM ICON OPTIONS
@@ -69,5 +87,14 @@ leafIcons <- icons(
   iconAnchorX = 22,
   iconAnchorY = 94
 )
+
+time_occurred <- '10H 0M 0S'
+
+format(strptime(time_occurred, format = "%HH %MM %SS"), format = "%I:%M %p")
+
+# Format the datetime object as desired
+formatted_time <- format(time, format = "%I:%M %p")
+
+
 
 
