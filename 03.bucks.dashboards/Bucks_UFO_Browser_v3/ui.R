@@ -27,7 +27,12 @@ years <-
       year = year(date_occurred)
     ) %>%
   distinct(year) %>% 
-  arrange(year)
+  arrange(year) %>% 
+  mutate(year = as.character(year))
+
+years <- 
+  tibble(year = "All") %>% 
+  bind_rows(years)
 
 # Define UI for application that draws a histogram
 fluidPage(

@@ -32,12 +32,21 @@ cities <-
 
 function(input, output, session) {
   filteredCases <- reactive({
-    cases <-
-      nuforc_reports %>%
-      filter(year(date_occurred) == input$year) %>%
-      arrange(date_occurred) %>%
-      select(case = key) %>%
-      as.list()
+    
+    if(input$year == "All"){
+      cases <-
+        nuforc_reports %>%
+        arrange(date_occurred) %>%
+        select(case = key) %>%
+        as.list()
+    } else {
+      cases <-
+        nuforc_reports %>%
+        filter(year(date_occurred) == input$year) %>%
+        arrange(date_occurred) %>%
+        select(case = key) %>%
+        as.list()
+    }
     
     cases$case
     
@@ -240,7 +249,7 @@ function(input, output, session) {
             shape_bin == "teardrops" ~ "orange",
             TRUE ~ "gray"
           ),
-        clusterOptions = markerClusterOptions(),
+        # clusterOptions = markerClusterOptions(),
         label = ~sprintf("%s | %s | %s", city, shape_bin, date_occurred),
         popup = ~sprintf(
           "<h3>%s %s</h3>%s %s <br>%s | %s > %s %s</p><p>%s</p>", 
@@ -262,12 +271,27 @@ function(input, output, session) {
       count(shape_bin) %>%
       arrange(desc(n))
     
-    ggplot(shape_freq, aes(x = shape_bin, y = n)) +
+    # colors <- c("red", "blue", "green", "yellow", "orange")
+    
+    ggplot(shape_freq, aes(x = reorder(shape_bin, n), y = n, fill = shape_bin)) +
       geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("darkred", "darkgreen", "black", "darkblue", "darkorange", "gray", "gray", "gray", "gray", "gray"), 
+                        breaks = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross"), 
+                        labels = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross")) +
       xlab("UFO Shape") +
       ylab("Frequency") +
       ggtitle("UFO Shapes") +
       theme_minimal()
+    
+    
+    # scale_fill_manual(values = c("red", "green", "black", "blue", "orange", "gray", "gray", "gray", "gray", "gray"), 
+    #                   breaks = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross"), 
+    #                   labels = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross")) +
+      
+
+      
+    
+     
     
   })
   
@@ -279,8 +303,6 @@ function(input, output, session) {
       select(case = key, description) %>% 
       ungroup() %>%
       unnest_tokens(word, description)
-    
-
     
     tidy_cases %>%
       filter(word != "object") %>% 
