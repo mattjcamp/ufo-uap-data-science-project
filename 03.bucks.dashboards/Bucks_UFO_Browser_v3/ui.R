@@ -6,7 +6,11 @@
 #
 #    http://shiny.rstudio.com/
 
+library(leaflet)
+library(leaflet.extras)
 library(tidyverse)
+library(htmltools)
+library(htmlwidgets)
 library(shiny)
 
 # d <- read_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v2/nuforc_reports_past_10_years_bucks.csv") %>% 
@@ -41,23 +45,35 @@ fluidPage(
                          choices = years,
                          multiple = FALSE),
 
-          uiOutput("reactiveControls"),
+          # uiOutput("reactiveControls"),
         ),
 
         mainPanel(
-          htmlOutput("title"),
-          htmlOutput("detail"),
+          plotOutput("shape_freq", height = 200),
         ),
         
 
         
     ),
-    
     br(),
     hr(),
-    
+    leafletOutput(
+      "map",
+      width = "100%", 
+      height = 600),
+    br(),
+    hr(),
+    plotOutput("wordcloud"),
+    br(),
+    hr(),
+    uiOutput("reactiveControls"),
+    htmlOutput("title"),
+    htmlOutput("detail"),
+    br(),
+    hr(),
     htmlOutput("description", class = "description_textbox"),
     br(),
+    hr(),
     htmlOutput("textAnalysis"),
     tableOutput("nprTable"),
 

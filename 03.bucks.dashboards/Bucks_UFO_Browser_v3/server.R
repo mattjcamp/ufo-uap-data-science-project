@@ -12,6 +12,14 @@ library(shiny)
 library(here)
 library(lubridate)
 library(DT)
+library(htmlwidgets)
+library(leaflet)
+library(leaflet.extras)
+library(htmltools)
+library(reshape2)
+library(wordcloud)
+library(tidytext)
+library(lubridate)
 
 nuforc_reports <-
   read_csv(file = "nuforc_reports_past_10_years_bucks.csv", 
@@ -210,5 +218,78 @@ function(input, output, session) {
     report 
   })
   
+  
+  output$map <- renderLeaflet({
+    
+    nuforc_reports %>% 
+      filter(key %in% filteredCases()) %>% 
+      mutate(
+        latitude = as.numeric(latitude),
+        longitude = as.numeric(longitude)
+      ) %>% 
+      leaflet() %>% 
+      addProviderTiles(providers$CartoDB.Positron) %>% 
+      addCircleMarkers(
+        radius = 10,
+        color = ~
+          case_when(
+            shape_bin == "lights" ~ "red",
+            shape_bin == "disks" ~ "green",
+            shape_bin == "triangles" ~ "black",
+            shape_bin == "cigars" ~ "blue",
+            shape_bin == "teardrops" ~ "orange",
+            TRUE ~ "gray"
+          ),
+        clusterOptions = markerClusterOptions(),
+        label = ~sprintf("%s | %s | %s", city, shape_bin, date_occurred),
+        popup = ~sprintf(
+          "<h3>%s %s</h3>%s %s <br>%s | %s > %s %s</p><p>%s</p>", 
+          city, str_to_title(shape), 
+          date_occurred, format(strptime(time_occurred, format = "%HH %MM %SS"), format = "%I:%M %p"), 
+          key, shape_bin, shape, duration,
+          description)
+      )
+  })
+  
+  output$shape_freq <- renderPlot({
+    
+    shape_freq <-
+      nuforc_reports %>%
+      filter(key %in% filteredCases()) %>% 
+      mutate(
+        shape_bin = ifelse(is.na(shape_bin), "unknowns", shape_bin)
+      ) %>%
+      count(shape_bin) %>%
+      arrange(desc(n))
+    
+    ggplot(shape_freq, aes(x = shape_bin, y = n)) +
+      geom_bar(stat = "identity") +
+      xlab("UFO Shape") +
+      ylab("Frequency") +
+      ggtitle("UFO Shapes") +
+      theme_minimal()
+    
+  })
+  
+  output$wordcloud <- renderPlot({
+    
+    tidy_cases <-
+      nuforc_reports %>% 
+      filter(key %in% filteredCases()) %>% 
+      select(case = key, description) %>% 
+      ungroup() %>%
+      unnest_tokens(word, description)
+    
+
+    
+    tidy_cases %>%
+      filter(word != "object") %>% 
+      inner_join(get_sentiments("bing")) %>%
+      count(word, sentiment, sort = TRUE) %>%
+      acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+      comparison.cloud(colors = c("darkred", "darkgreen"),
+                       max.words = 300)
+    
+  })
   
 }
