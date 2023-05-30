@@ -22,7 +22,7 @@ library(tidytext)
 library(lubridate)
 
 nuforc_reports <-
-  read_csv(file = "nuforc_reports_past_10_years_bucks.csv", 
+  read_csv(file = "nuforc_reports.csv", 
            col_types = cols(.default = "c"))
 
 cities <-
@@ -282,16 +282,6 @@ function(input, output, session) {
       ylab("Frequency") +
       ggtitle("UFO Shapes") +
       theme_minimal()
-    
-    
-    # scale_fill_manual(values = c("red", "green", "black", "blue", "orange", "gray", "gray", "gray", "gray", "gray"), 
-    #                   breaks = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross"), 
-    #                   labels = c("lights", "disks", "triangles", "cigars", "teardrops", "unknowns", "changing", "sphere", "formation", "cross")) +
-      
-
-      
-    
-     
     
   })
   

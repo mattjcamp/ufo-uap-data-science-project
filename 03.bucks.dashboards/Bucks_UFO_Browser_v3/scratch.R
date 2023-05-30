@@ -95,6 +95,52 @@ format(strptime(time_occurred, format = "%HH %MM %SS"), format = "%I:%M %p")
 # Format the datetime object as desired
 formatted_time <- format(time, format = "%I:%M %p")
 
+# save smaller version of dataset
+
+nuforc_reports <- read_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/nuforc_reports_past_10_years_bucks.csv",
+                           col_types = cols(.default = "c")) %>% 
+  select(
+    key,
+    date_occurred,
+    day_of_week,
+    time_occurred,
+    shape,
+    shape_bin,
+    duration_in_minutes,
+    duration,
+    city,
+    latitude,
+    longitude,
+    description,
+    perc_positive,
+    perc_anger,
+    perc_anticipation,
+    perc_disgust,
+    perc_fear,
+    perc_surprise,
+    perc_trust,
+    perc_joy,
+    perc_sadness,
+    dominate_emotion
+  ) %>%
+  glimpse()
 
 
+nuforc_reports %>% 
+  write_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/nuforc_reports.csv")
+
+# YEARS FOR UI
+
+years <- 
+  read_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/nuforc_reports.csv") %>%
+  select(date_occurred) %>% 
+  mutate(
+    year = year(date_occurred)
+  ) %>%
+  distinct(year) %>% 
+  arrange(year) %>% 
+  mutate(year = as.character(year))
+
+years %>% 
+  write_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/years.csv")
 

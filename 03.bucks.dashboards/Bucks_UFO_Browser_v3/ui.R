@@ -13,21 +13,8 @@ library(htmltools)
 library(htmlwidgets)
 library(shiny)
 
-# d <- read_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v2/nuforc_reports_past_10_years_bucks.csv") %>% 
-#   select(date_occurred) %>% 
-#   mutate(
-#     year = year(date_occurred)
-#   ) %>% 
-#   glimpse()
-
-
 years <- 
-  read_csv(file = "nuforc_reports_past_10_years_bucks.csv") %>%
-    mutate(
-      year = year(date_occurred)
-    ) %>%
-  distinct(year) %>% 
-  arrange(year) %>% 
+  read_csv(file = "years.csv") %>% 
   mutate(year = as.character(year))
 
 years <- 
