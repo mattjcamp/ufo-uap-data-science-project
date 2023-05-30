@@ -33,20 +33,53 @@ cities <-
 function(input, output, session) {
   filteredCases <- reactive({
     
-    if(input$year == "All"){
+    cases <- 
+      nuforc_reports %>%
+      arrange(date_occurred)
+    
+    # ONLY YEAR SELECTED
+    if(!input$year == "All" && input$shape == "All"){
+      
+      message("ONLY YEAR SELECTED")
+      
       cases <-
-        nuforc_reports %>%
-        arrange(date_occurred) %>%
-        select(case = key) %>%
-        as.list()
-    } else {
-      cases <-
-        nuforc_reports %>%
-        filter(year(date_occurred) == input$year) %>%
-        arrange(date_occurred) %>%
-        select(case = key) %>%
-        as.list()
+        cases %>%
+        filter(
+          year(date_occurred) == input$year
+          )
     }
+    
+    # ONLY SHAPE SELECTED
+    if(input$year == "All" && !input$shape == "All"){
+      
+      message("ONLY SHAPE SELECTED")
+      
+      cases <-
+        cases %>%
+        filter(
+          shape_bin == input$shape
+        )
+    }
+    
+    # BOTH YEAR AND SHAPE SELECTED
+    
+    if(!input$year == "All" && !input$shape == "All"){
+      
+      message("BOTH YEAR AND SHAPE SELECTED")
+      
+      cases <-
+        cases %>%
+        filter(
+          shape_bin == input$shape,
+          year(date_occurred) == input$year
+        )
+    }
+    
+    cases <-
+      cases %>%
+      arrange(date_occurred) %>% 
+      select(case = key) %>% 
+      as.list()
     
     cases$case
     

@@ -144,3 +144,14 @@ years <-
 years %>% 
   write_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/years.csv")
 
+# SHAPES FOR UI
+shapes <- 
+  read_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/nuforc_reports.csv") %>%
+  distinct(shape_bin) %>% 
+  filter(!is.na(shape_bin))
+
+shapes %>% 
+  write_csv(file = "./03.bucks.dashboards/Bucks_UFO_Browser_v3/shapes.csv")
+
+  
+

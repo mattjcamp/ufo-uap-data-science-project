@@ -16,10 +16,16 @@ library(shiny)
 years <- 
   read_csv(file = "years.csv") %>% 
   mutate(year = as.character(year))
-
 years <- 
   tibble(year = "All") %>% 
   bind_rows(years)
+
+shapes <- 
+  read_csv(file = "shapes.csv")
+shapes <- 
+  tibble(shape_bin = "All") %>% 
+  bind_rows(shapes)
+
 
 # Define UI for application that draws a histogram
 fluidPage(
@@ -38,6 +44,9 @@ fluidPage(
                          multiple = FALSE),
 
           # uiOutput("reactiveControls"),
+          selectizeInput("shape", "Shape",
+                         choices = shapes,
+                         multiple = FALSE),
         ),
 
         mainPanel(
