@@ -7,6 +7,10 @@
 *.RData
 .csv
 *.csv
+.xlsx
+*.xlsx
+.zip
+*.zip
 
 # User-specific files
 .Ruserdata
